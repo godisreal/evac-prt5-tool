@@ -7,11 +7,12 @@ from read_evac import *
 if sys.version_info[0] == 3: # Python 3
     from tkinter import *
     from tkinter.ttk import Notebook
+    import tkinter.tkfiledialog as tkf
 else:
     # Python 2
     from Tkinter import *
     from ttk import Notebook
-    import tkFileDialog
+    import tkFileDialog as tkf
     
 class GUI(object):
 
@@ -106,7 +107,6 @@ class GUI(object):
         #buttonStart.place(x=5,y=220)
         print self.FN[0], self.FN[1]
 
-
     def start(self):
         self.window.mainloop()
 
@@ -131,7 +131,7 @@ class GUI(object):
         widget.bind("<Leave>", lambda e : showHelpLeave(self))
 
     def selectFile(self, index):
-        self.FN[index] = tkFileDialog.askopenfilename(filetypes=(("All files", "*.*"), ("csv files", "*.csv") ))
+        self.FN[index] = tkf.askopenfilename(filetypes=(("All files", "*.*"), ("csv files", "*.csv") ))
         if index ==0:
             self.lb0.config(text = "The FDS data file selected: "+str(self.FN[index])+"\n")
         elif index ==1:
@@ -141,7 +141,7 @@ class GUI(object):
         print 'fname', self.FN[index]
         
     def selectFDSFile(self):
-        self.fname_FDS = tkFileDialog.askopenfilename(filetypes=(("All files", "*.*"), ("csv files", "*.csv") ))
+        self.fname_FDS = tkf.askopenfilename(filetypes=(("All files", "*.*"), ("csv files", "*.csv") ))
         self.FN[0]=self.fname_FDS
         temp=re.split(r'/', self.fname_FDS)
         #temp=self.fname_FDS.split('/') 
@@ -151,7 +151,7 @@ class GUI(object):
         self.setStatusStr("Simulation not yet started!")
 
     def selectEvacFile(self):
-        self.fname_EVAC = tkFileDialog.askopenfilename(filetypes=(("All files", "*.*"), ("csv files", "*.csv") ))
+        self.fname_EVAC = tkf.askopenfilename(filetypes=(("All files", "*.*"), ("csv files", "*.csv") ))
         self.FN[1]=self.fname_EVAC
         temp=self.fname_EVAC.split('/') 
         self.lb1.config(text = "The input .csv file selected: "+str(temp[-1])+"\n")
@@ -161,6 +161,12 @@ class GUI(object):
 
     def readData(self):
         self.setStatusStr("Read Prt5 Data! This action may take a few seconds or minutes, depending on the data size")
+        if os.path.exists(self.FN[1]):
+            print('load .prt5 file and extract evac-related information', self.FN[1])
+            readPRTfile(self.FN[1])
+            self.setStatusStr("Read Prt5 Data Successfully!")
+            return
+        
         if os.path.exists(self.FN[0]):
             print ('load .fds file and extract evac-related information', self.FN[0])
             CHID=readCHID(self.FN[0])
@@ -171,14 +177,10 @@ class GUI(object):
             readPRTfile(CHID+'_evac_0001.prt5')
             self.setStatusStr("Read Prt5 Data Successfully!")
             return
-        if os.path.exists(self.FN[1]):
-            print('load .prt5 file and extract evac-related information', self.FN[1])
-            readPRTfile(self.FN[1])
-            self.setStatusStr("Read Prt5 Data Successfully!")
-            return
         
         print('No input files found! Please select the data file or fds input file!')
         self.setStatusStr('No input files found! Please select the data file or fds input file!')
+        return
         
     def startSim(self):
         #myTest = simulation()
@@ -198,16 +200,28 @@ class GUI(object):
 
             # The following lines are effective only for the latest version of fds as well as fds6_dump205.exe
             # If you are using the old version of fds, please modify the code to read evac prt5 file.
-            if os.path.exists(CHID+'_evac_0001.npz'):
-                pass
-            else:
-                readPRTfile(CHID+'_evac_0001.prt5')
+            if self.fname_EVAC is None:
+                if os.path.exists(CHID+'_evac_0001.npz'):
+                    pass
+                else:
+                    readPRTfile(CHID+'_evac_0001.prt5')
                 
-            sunpro1 = mp.Process(target=visualizeEvac(CHID+'_evac_0001.npz', self.FN[0]))
-            sunpro1.start()
-            sunpro1.join()
+                sunpro1 = mp.Process(target=visualizeEvac(CHID+'_evac_0001.npz', self.FN[0]))
+                sunpro1.start()
+                sunpro1.join()
             #visualizeEvac(CHID+'_evac_0001.npz', self.FN[0])
-        else:
+            else:
+                temp=self.fname_EVAC.split('.prt5')
+                fname_npz = temp[0]+'.npz'
+                if os.path.exists(fname_npz):
+                    pass
+                else:
+                    readPRTfile(self.fname_EVAC)
+                
+                sunpro1 = mp.Process(target=visualizeEvac(fname_npz, self.FN[0]))
+                sunpro1.start()
+                sunpro1.join()
+        else: # No fname for .fds
             print ("Input file %s does not exist!" %self.FN[0])
             exit(-1)
             

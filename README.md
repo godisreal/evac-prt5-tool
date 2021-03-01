@@ -1,11 +1,14 @@
 # evac-prt5-tool
 
+|Python2| |Python3| |GithubCommits|
+
 ### Read evac prt5 data  
 Run a fds+evac case by using either fds5 or fds6, and ensure you get a .prt5 evac data file.  Then run the python script as below  
 python readprt_evac.py data.prt5
 
 This python script is extended based on Topi's contribution, please see FDS discussion forum for details.  
-https://groups.google.com/g/fds-smv/c/dFUWR00T6hw
+https://groups.google.com/g/fds-smv/c/dFUWR00T6hw   
+
 Thank Topi for sharing his wonderful script and thank Salah Benkorichi for sending this thread to me!  
 I mainly modified xyz.shape = (7,nplim) for evac prt5 data.  In Topi's script it was initially given by xyz.shape = (3,nplim).  Maybe xyz.shape = (3,nplim) is for Lagrangian Particles.  We use xyz.shape = (7,nplim) for evac prt5 data.  
 

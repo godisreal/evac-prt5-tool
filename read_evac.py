@@ -393,14 +393,14 @@ def readFRec(infile,fmt):
     if num>1:
         result = struct.unpack(fmt2,infile.read(len1))
     else:
-        result = struct.unpack(fmt2,infile.read(len1))[0]
+        result = struct.unpack(fmt2,infile.read(len1))[0]  #?? why no list here??
     len2   = struct.unpack('@I', infile.read(4))[0]
     if fmt == 's':
         result=result[0].rstrip()
     return result
 
 #Assumes single precision
-def readPRTfile(fname, max_time=np.Inf):
+def readPRTfile(fname, max_time=np.Inf, mode='evac'):
 
     fin = open(fname,'rb')
     temp = fname.split('.prt5')
@@ -436,13 +436,17 @@ def readPRTfile(fname, max_time=np.Inf):
             q    = np.array(readFRec(fin,'f'))
 
             #print >> outfile, "g", q, "\n"
-            xyz.shape = (7,nplim)
-            print >> outfile, "xyz:", xyz, "\n" 
-            print >> outfile, "tag:", tag, "\n"
+            if mode=='evac':
+                xyz.shape = (7,nplim) # evac data: please check dump_evac() in evac.f90
+            else: 
+                xyz.shape = (3,nplim) # particle data: please check dump_part() in dump.f90
+                
+            outfile.write("xyz:" + str(xyz) + "\n") 
+            outfile.write("tag:" + str(tag) + "\n")
             
             q.shape   = (n_quant, nplim)
             
-            print >> outfile, "q:", q, "\n"
+            outfile.write( "q:" + str(q) + "\n")
 
             # process timestep data
             T.append(Time)
@@ -465,6 +469,7 @@ def visualizeEvac(fname, fdsfile=None):
     Time = prtdata["arr_0"]
     XYZ = prtdata["arr_1"]
     TAG = prtdata["arr_2"]
+    print("TAG:", TAG)
 
     T_END = len(Time)
     print ("Length of time axis in prt5 data file", T_END)
@@ -486,6 +491,10 @@ def visualizeEvac(fname, fdsfile=None):
     SHOWWALLDATA=True
     SHOWDOORDATA=True
     SHOWEXITDATA=True
+    PAUSE=False
+    REWIND=False
+    FORWARD=False
+
     
     pygame.init()
     screen = pygame.display.set_mode([800, 350])
@@ -514,8 +523,14 @@ def visualizeEvac(fname, fdsfile=None):
                     ZOOMFACTOR = max(6.0, ZOOMFACTOR -1)
                 elif event.key == pygame.K_t:
                     MODETRAJ = not MODETRAJ
-                #elif event.key == pygame.K_SPACE:
-                #    simu.PAUSE = not simu.PAUSE
+                elif event.key == pygame.K_SPACE:
+                    PAUSE = not PAUSE
+                elif event.key == pygame.K_LESS:
+                    REWIND = True
+                    PAUSE = True
+                elif event.key == pygame.K_GREATER:
+                    FORWARD = True
+                    PAUSE = True
                 #elif event.key == pygame.K_v:
                  #   simu.SHOWVELOCITY = not simu.SHOWVELOCITY
                 #elif event.key == pygame.K_i:
@@ -548,8 +563,15 @@ def visualizeEvac(fname, fdsfile=None):
         if T_INDEX == None or T_INDEX==T_END-1:
             print("Simulation End!")
             running=False
+            pygame.display.quit()
         else:
-            T_INDEX = T_INDEX+1
+            if PAUSE==False:
+                T_INDEX = T_INDEX+1
+            else:
+                if REWIND:
+                    T_INDEX = T_INDEX-1
+                if FORWARD:
+                    T_INDEX = T_INDEX+1
         #nplim = readFRec(fin,'I')  # Number of particles in the PART class
         
         Time_t = Time[T_INDEX]
@@ -572,7 +594,8 @@ def visualizeEvac(fname, fdsfile=None):
         drawDoors(screen, doors, ZOOMFACTOR, SHOWDOORDATA, xSpace, ySpace)
         drawExits(screen, exits, ZOOMFACTOR, SHOWEXITDATA, xSpace, ySpace)
 
-        for idai in range(len(TAG_t)):
+        print ("Show TAG_t: ", TAG_t)
+        for idai in range(np.size(TAG_t)):
             
             #scPos = np.array([0, 0])
             scPos = [0, 0]
@@ -585,6 +608,8 @@ def visualizeEvac(fname, fdsfile=None):
             #pygame.draw.circle(screen, color_para, scPos, int(0.2*ZOOMFACTOR), 2)
             #int(agent.radius*ZOOMFACTOR), LINEWIDTH)
 
+        REWIND=False
+        FORWARD=False
         pygame.display.flip()
         clock.tick(20)
 
