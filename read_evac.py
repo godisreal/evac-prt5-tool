@@ -458,7 +458,7 @@ def readPRTfile(fname, max_time=np.Inf, mode='evac'):
     
     fin.close()
     outfile.close()
-    np.savez( outfn + ".npz", T, XYZ, TAG)
+    np.savez( outfn + ".npz", T, XYZ, TAG, Q)
     return (np.array(T),np.hstack(Q),q_labels,q_units)
 
 
@@ -469,6 +469,7 @@ def visualizeEvac(fname, fdsfile=None):
     Time = prtdata["arr_0"]
     XYZ = prtdata["arr_1"]
     TAG = prtdata["arr_2"]
+    #INFO = prtdata["arr_3"]
     print("TAG:", TAG)
 
     T_END = len(Time)
@@ -525,12 +526,14 @@ def visualizeEvac(fname, fdsfile=None):
                     MODETRAJ = not MODETRAJ
                 elif event.key == pygame.K_SPACE:
                     PAUSE = not PAUSE
-                elif event.key == pygame.K_LESS:
+                elif event.key == pygame.K_HOME:
                     REWIND = True
                     PAUSE = True
-                elif event.key == pygame.K_GREATER:
+                    #xSpace=xSpace-10
+                elif event.key == pygame.K_END:
                     FORWARD = True
                     PAUSE = True
+                    #xSpace=xSpace+10
                 #elif event.key == pygame.K_v:
                  #   simu.SHOWVELOCITY = not simu.SHOWVELOCITY
                 #elif event.key == pygame.K_i:
@@ -562,21 +565,23 @@ def visualizeEvac(fname, fdsfile=None):
         #Time  = readFRec(fin,'f')  # Time index
         if T_INDEX == None or T_INDEX==T_END-1:
             print("Simulation End!")
-            running=False
-            pygame.display.quit()
+            #running=False
+            #pygame.display.quit()
+            PAUSE=True
         else:
             if PAUSE==False:
                 T_INDEX = T_INDEX+1
             else:
-                if REWIND:
+                if REWIND and T_INDEX>0:
                     T_INDEX = T_INDEX-1
-                if FORWARD:
+                if FORWARD and T_INDEX<T_END-1:
                     T_INDEX = T_INDEX+1
         #nplim = readFRec(fin,'I')  # Number of particles in the PART class
         
         Time_t = Time[T_INDEX]
         XYZ_t = XYZ[T_INDEX]
         TAG_t = TAG[T_INDEX]
+        #INFO_t = INFO[T_INDEX]
 
         #############################
         ######### Drawing Process ######

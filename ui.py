@@ -22,12 +22,12 @@ class GUI(object):
         self.FN=[None, None] #, None]
         self.FN[0]=FN_FDS
         self.FN[1]=FN_EVAC
-        self.fname_FDS=None
-        self.fname_EVAC=None
+        self.fname_FDS=FN_FDS
+        self.fname_EVAC=FN_EVAC
 
         self.window = Tk()
-        self.window.title('prt5 tool')
-        self.window.geometry('760x300')
+        self.window.title('evac prt5 tool')
+        self.window.geometry('760x320')
 
         self.notebook = Notebook(self.window)      
         self.notebook.pack(side=TOP, padx=2, pady=2)
@@ -78,23 +78,23 @@ class GUI(object):
         # --------------------------------------------
         # frameRun
         # --------------------------------------------
-        self.lb_guide = Label(self.window, text =  "Please select the input files of FDS")
+        self.lb_guide = Label(self.window, text =  "Please select the input files.")
         self.lb_guide.pack()
 
-        self.lb0 = Label(self.window,text =  "The FDS data file selected: "+str(self.FN[0])+"\n")
+        self.lb0 = Label(self.window,text =  "The FDS input file selected: "+str(self.fname_FDS)+"\n")
         self.lb0.pack()
 
-        self.lb1 = Label(self.window,text =  "The EVAC data file selected: "+str(self.FN[1])+"\n")
+        self.lb1 = Label(self.window,text =  "The EVAC data file selected: "+str(self.fname_EVAC)+"\n")
         self.lb1.pack()
 
         #self.lb2 = Label(frameRun,text =  "The exit data file selected: "+str(FN[2])+"\n")
         #self.lb2.pack()
 
-        self.buttonSelectFDS =Button(self.window, text='choose fds file for FDS data', command=self.selectFDSFile)
+        self.buttonSelectFDS =Button(self.window, text='choose fds input file', command=self.selectFDSFile)
         self.buttonSelectFDS.pack()
         self.showHelp(self.buttonSelectFDS, "Select FDS input file!")
 
-        self.buttonSelectPRT =Button(self.window, text='choose prt file for EVAC data', command=self.selectEvacFile)
+        self.buttonSelectPRT =Button(self.window, text='choose prt5 evac data file', command=self.selectEvacFile)
         self.buttonSelectPRT.pack()
         self.showHelp(self.buttonSelectPRT, "Select prt5 data file!")
         #Button(window, text='choose csv file for door data', command=lambda: selectFile(2)).pack()
@@ -102,8 +102,13 @@ class GUI(object):
         #if CheckVar1.get():
         #    buttonSelectFDS.configure(state=DISABLED)
         #TestV=CheckVar1.get()
-        self.buttonRead = Button(self.window, text='read now: read in data', command=self.readData).pack()
-        self.buttonStart = Button(self.window, text='start now: read in data', command=self.startSim).pack()
+        self.buttonRead = Button(self.window, text='read data into text file', command=self.readData)
+        self.buttonRead.pack()
+        self.showHelp(self.buttonRead, "Read Prt5 Data! This action may take some time, \n depending on the size of data file!")
+
+        self.buttonStart = Button(self.window, text='simulate: visualize data', command=self.startSim)
+        self.buttonStart.pack()
+        self.showHelp(self.buttonStart, "Visualize all data files selected!")
         #buttonStart.place(x=5,y=220)
         print self.FN[0], self.FN[1]
 
@@ -141,30 +146,31 @@ class GUI(object):
         print 'fname', self.FN[index]
         
     def selectFDSFile(self):
-        self.fname_FDS = tkf.askopenfilename(filetypes=(("All files", "*.*"), ("csv files", "*.csv") ))
+        self.fname_FDS = tkf.askopenfilename(filetypes=(("All files", "*.*"), ("fds files", "*.fds") ))
         self.FN[0]=self.fname_FDS
         temp=re.split(r'/', self.fname_FDS)
         #temp=self.fname_FDS.split('/') 
-        self.lb0.config(text = "Optional: If .fds is selected, the compartment geometry is created by .fds file. \n"+"The FDS data file selected: "+str(temp[-1])+"\n")
-        self.textInformation.insert(END, 'fname_FDS:   '+self.fname_FDS)
+        self.lb0.config(text = "If .fds is selected, the compartment geometry is created by .fds file. \n"+"The FDS data file selected: "+str(temp[-1])+"\n")
+        self.textInformation.insert(END, '\n'+'FDS Input File Selected:   '+self.fname_FDS+'\n')
         print('fname_FDS:', self.fname_FDS)
-        self.setStatusStr("Simulation not yet started!")
+        self.setStatusStr("Select FDS Input File.")
 
     def selectEvacFile(self):
-        self.fname_EVAC = tkf.askopenfilename(filetypes=(("All files", "*.*"), ("csv files", "*.csv") ))
+        self.fname_EVAC = tkf.askopenfilename(filetypes=(("All files", "*.*"), ("prt5 files", "*.prt5") ))
         self.FN[1]=self.fname_EVAC
         temp=self.fname_EVAC.split('/') 
-        self.lb1.config(text = "The input .csv file selected: "+str(temp[-1])+"\n")
-        self.textInformation.insert(END, 'fname_EVAC:   '+self.fname_EVAC)
-        print('fname', self.fname_EVAC)
-        self.setStatusStr("Simulation not yet started!")
+        self.lb1.config(text = "The input prt5 data file selected: "+str(temp[-1])+"\n")
+        self.textInformation.insert(END, '\n'+'EVAC prt5 Data Selected:   '+self.fname_EVAC+'\n')
+        print('fname_EVAC', self.fname_EVAC)
+        self.setStatusStr("Select Evac prt5 Data File.")
 
     def readData(self):
-        self.setStatusStr("Read Prt5 Data! This action may take a few seconds or minutes, depending on the data size")
+        #self.setStatusStr("Read Prt5 Data! This action may take a few seconds or minutes, depending on the size of data file!")
         if os.path.exists(self.FN[1]):
             print('load .prt5 file and extract evac-related information', self.FN[1])
+            #self.textInformation.insert(END, "\nRead Prt5 Data! This action may take a few seconds or minutes, depending on the size of data file!")
             readPRTfile(self.FN[1])
-            self.setStatusStr("Read Prt5 Data Successfully!")
+            self.textInformation.insert(END, "\nRead Prt5 Data Successfully!\n")
             return
         
         if os.path.exists(self.FN[0]):
@@ -174,8 +180,9 @@ class GUI(object):
 
             # The following lines are effective only for the latest version of fds as well as fds6_dump205.exe
             # If you are using the old version of fds, please modify the code to read evac prt5 file.
+            #self.textInformation.insert(END, "\nRead Prt5 Data! This action may take a few seconds or minutes, depending on the size of data file!")
             readPRTfile(CHID+'_evac_0001.prt5')
-            self.setStatusStr("Read Prt5 Data Successfully!")
+            self.textInformation.insert(END, "\nRead Prt5 Data Successfully!\n")
             return
         
         print('No input files found! Please select the data file or fds input file!')
@@ -192,7 +199,8 @@ class GUI(object):
         #show_geom(myTest)
         #myTest.show_simulation()
         #myTest.quit()
-        self.setStatusStr("Visualize Prt5 Data by Pygame!")
+        #self.setStatusStr("Visualize Prt5 Data by Pygame!")
+        #self.textInformation.insert(END, "\nVisualize Prt5 Data by Pygame!\n")
         if os.path.exists(self.FN[0]):
             print ('load .fds file and extract evac-related information', self.FN[0])
             CHID=readCHID(self.FN[0])
