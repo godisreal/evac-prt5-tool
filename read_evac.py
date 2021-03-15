@@ -2,7 +2,7 @@
 """
 Created on  Aug 2020
 
-@author: 
+@author: WP and Topi
 """
 
 import numpy as np
@@ -68,12 +68,12 @@ def readCHID(FileName):
           #  return result[0].strip('\'')
             
 
-def readOBST(FileName, outputFile=None, ShowData=False):
+def readOBST(FileName, Keyword='&OBST', Zmin=0.0, Zmax=3.0, outputFile=None, ShowData=False):
     #fo = open("OBSTout.txt", "w+")
     obstFeatures = []
     findOBST=False
     for line in open(FileName):
-        if re.match('&OBST', line):
+        if re.match(Keyword, line):
             findOBST=True
         if  findOBST:
             if re.search('XB', line):
@@ -82,6 +82,10 @@ def readOBST(FileName, outputFile=None, ShowData=False):
                 temp =  line1.split('=')
                 dataXYZ = temp[1]
                 coords = dataXYZ.split(',')
+                #if float(coords[4])<Zmin and float(coords[5])<Zmin:
+                #    continue
+                #if float(coords[4])>Zmax and float(coords[5])>Zmax:
+                #    continue
                 obstFeature = []
                 obstFeature.append(float(coords[0]))
                 obstFeature.append(float(coords[2]))
@@ -125,16 +129,16 @@ def readOBST(FileName, outputFile=None, ShowData=False):
     return walls
 
 
-def readHOLE(FileName, outputFile=None, ShowData=False):
+def readPATH(FileName, Keyword='&HOLE', Zmin=0.0, Zmax=3.0, outputFile=None, ShowData=False):
     #fo = open("HOLEout.txt", "w+")
     holeFeatures = []
     
-    findHOLE=False
+    findPATH=False
     for line in open(FileName):
-        if re.match('&HOLE', line):
-            findHOLE=True
+        if re.match(Keyword, line):
+            findPATH=True
             
-        if  findHOLE:
+        if  findPATH:
             if re.search('XB', line):
                 temp1=line.split('XB')
                 line1=temp1[1]
@@ -142,13 +146,17 @@ def readHOLE(FileName, outputFile=None, ShowData=False):
                 dataXYZ = temp[1]
                     
                 coords = dataXYZ.split(',')
+                #if float(coords[4])<Zmin and float(coords[5])<Zmin:
+                #    continue
+                #if float(coords[4])>Zmax and float(coords[5])>Zmax:
+                #    continue
                 holeFeature = []
                 holeFeature.append(float(coords[0]))
                 holeFeature.append(float(coords[2]))
                 holeFeature.append(float(coords[1]))
                 holeFeature.append(float(coords[3]))
                 holeFeatures.append(holeFeature)
-                findHOLE=False
+                findPATH=False
 
                 if ShowData:
                     print (line, '\n', holeFeature)
@@ -186,7 +194,7 @@ def readHOLE(FileName, outputFile=None, ShowData=False):
     return doors
 
 
-def readEXIT(FileName, outputFile=None, ShowData=False):
+def readEXIT(FileName, Zmin=0.0, Zmax=3.0, outputFile=None, ShowData=False):
     #fo = open("EXITout.txt", "w+")
     exitFeatures = []
     findEXIT=False
@@ -200,6 +208,10 @@ def readEXIT(FileName, outputFile=None, ShowData=False):
                 temp =  line1.split('=')
                 dataXYZ = temp[1]
                 coords = dataXYZ.split(',')
+                #if float(coords[4])<Zmin and float(coords[5])<Zmin:
+                #    continue
+                #if float(coords[4])>Zmax and float(coords[5])>Zmax:
+                #    continue
                 exitFeature = []
                 exitFeature.append(float(coords[0]))
                 exitFeature.append(float(coords[2]))
@@ -245,9 +257,9 @@ def readEXIT(FileName, outputFile=None, ShowData=False):
 
 
 ####################
-# Drawing the walls
+# Drawing the obstructions
 ####################
-def drawWalls(screen, walls, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace=0.0):
+def drawOBST(screen, walls, color, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace=0.0):
 
     xyShift = np.array([xSpace, ySpace])
     for wall in walls:
@@ -276,7 +288,7 @@ def drawWalls(screen, walls, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace
             w= ZOOMFACTOR*(wall.params[2] - wall.params[0])
             h= ZOOMFACTOR*(wall.params[3] - wall.params[1])
             
-            pygame.draw.rect(screen, red, [x+xSpace, y+ySpace, w, h], 2)
+            pygame.draw.rect(screen, color, [x+xSpace, y+ySpace, w, h], 2)
 
             if SHOWDATA:
                 pass
@@ -293,11 +305,10 @@ def drawWalls(screen, walls, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace
 
    
 
-    ####################
-    # Drawing the doors
-    ####################
-
-def drawDoors(screen, doors, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace=0.0):
+#############################
+# Drawing the path like holes,  doors, etc.  
+#############################
+def drawPATH(screen, doors, color, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace=0.0):
 
     xyShift = np.array([xSpace, ySpace])
     for door in doors:
@@ -321,7 +332,7 @@ def drawDoors(screen, doors, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace
         w= ZOOMFACTOR*(door.params[2] - door.params[0])
         h= ZOOMFACTOR*(door.params[3] - door.params[1])
             
-        pygame.draw.rect(screen, green, [x+ xSpace, y+ ySpace, w, h], 2)
+        pygame.draw.rect(screen, color, [x+ xSpace, y+ ySpace, w, h], 2)
 
         if SHOWDATA:
             
@@ -337,47 +348,8 @@ def drawDoors(screen, doors, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace
             screen.blit(text_surface, door.pos*ZOOMFACTOR+xyShift)
 
 
-    ####################
-    # Drawing the exits
-    ####################
-
-def drawExits(screen, exits, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace=0.0):
-
-    xyShift = np.array([xSpace, ySpace])
-    for exit in exits:
-
-        if exit.inComp == 0:
-            continue
-
-        startPos = np.array([exit.params[0],exit.params[1]]) #+xyShift
-        endPos = np.array([exit.params[2],exit.params[3]]) #+xyShift
-
-        #Px = [0, 0]
-        #Px[0] = int(Pos[0]*ZOOMFACTOR)
-        #Px[1] = int(Pos[1]*ZOOMFACTOR)
-        #pygame.draw.circle(screen, red, Px, LINESICKNESS)
-
-        x= ZOOMFACTOR*exit.params[0]
-        y= ZOOMFACTOR*exit.params[1]
-        w= ZOOMFACTOR*(exit.params[2] - exit.params[0])
-        h= ZOOMFACTOR*(exit.params[3] - exit.params[1])
-            
-        pygame.draw.rect(screen, orange, [x+ xSpace, y+ ySpace, w, h], 2)
-
-        if SHOWDATA:
-
-            myfont=pygame.font.SysFont("arial",10)
-            text_surface=myfont.render(str(startPos), True, blue, (255,255,255))
-            screen.blit(text_surface, startPos*ZOOMFACTOR + xyShift)
-
-            #text_surface=myfont.render(str(endPos), True, blue, (255,255,255))
-            #screen.blit(text_surface, endPos*ZOOMFACTOR + xyShift)
-
-            myfont=pygame.font.SysFont("arial",13)
-            text_surface=myfont.render('ID'+str(exit.id)+'/'+str(exit.arrow), True, blue, (255,255,255))
-            screen.blit(text_surface, exit.pos*ZOOMFACTOR + xyShift)
-
-
+##############################
+# The function readFRec is mainly written by Topi
 #Read fortran record, return payload as bytestring
 def readFRec(infile,fmt):
     len1   = infile.read(4)
@@ -399,8 +371,11 @@ def readFRec(infile,fmt):
         result=result[0].rstrip()
     return result
 
+
+#################################
+# The function readPRTfile is mainly written by Topi
 #Assumes single precision
-def readPRTfile(fname, max_time=np.Inf, mode='evac'):
+def readPRTfile(fname, wrtxt = True, max_time=np.Inf, mode='evac'):
 
     fin = open(fname,'rb')
     temp = fname.split('.prt5')
@@ -440,13 +415,13 @@ def readPRTfile(fname, max_time=np.Inf, mode='evac'):
                 xyz.shape = (7,nplim) # evac data: please check dump_evac() in evac.f90
             else: 
                 xyz.shape = (3,nplim) # particle data: please check dump_part() in dump.f90
-                
-            outfile.write("xyz:" + str(xyz) + "\n") 
-            outfile.write("tag:" + str(tag) + "\n")
             
             q.shape   = (n_quant, nplim)
             
-            outfile.write( "q:" + str(q) + "\n")
+            if wrtxt:
+                outfile.write("xyz:" + str(xyz) + "\n") 
+                outfile.write("tag:" + str(tag) + "\n")           
+                outfile.write( "q:" + str(q) + "\n")
 
             # process timestep data
             T.append(Time)
@@ -458,20 +433,42 @@ def readPRTfile(fname, max_time=np.Inf, mode='evac'):
     
     fin.close()
     outfile.close()
-    np.savez( outfn + ".npz", T, XYZ, TAG, Q)
-    return (np.array(T),np.hstack(Q),q_labels,q_units)
+    #np.savez( outfn + ".npz", T, XYZ, TAG, Q)
+    #return (np.array(T),np.hstack(Q),q_labels,q_units)
+    return T, XYZ, TAG, Q
 
 
-def visualizeEvac(fname, fdsfile=None):
+def visualizeEvac(fname, fdsfile=None, Zmin=0.0, Zmax=3.0):
+    
+    # Because visualizeEvac is a 2D visualizer, we can only show agents in a single floors each time and if there are multiple floors in fds+evac simulation, users should specify which floor they want to visualize.  Otherwise there will be overlap of agents in different floors.  The default values are given by Zmin=0.0 and Zmax=3.0, which means the gound floor approximately.  
+ 
+     # Therefore It is recommended for users to first open .fds input file to see if there are multiple floors.  User should specify Zmin and Zmax and agents are visualized in z axis between Zmin and Zmax.  
+        
+    #Zmin is the lower bound of z values in a floor (e.g., often z lower bound of an evacuation mesh)
+    #Zmax is the upper bound of z values in a floor (e.g., often z upper bound of an evacuation mesh)
 
-    prtdata = np.load(fname) #load .npz file
 
-    Time = prtdata["arr_0"]
-    XYZ = prtdata["arr_1"]
-    TAG = prtdata["arr_2"]
+    # np.load has some unexpected problem for latest version of numpy in python3.  Thus I will not use this stuff.  
+    # If anyone wants to help to debug the following lines, I will appreciate.  
+    
+    #prtdata = np.load(fname) #load .npz file
+    #Time = prtdata["arr_0"]
+    #XYZ = prtdata["arr_1"]
+    #TAG = prtdata["arr_2"]
     #INFO = prtdata["arr_3"]
-    print("TAG:", TAG)
-
+    #print("TAG:", TAG)
+    
+    # If there are already .txt data extracted from .prt5 file, the visualizer will not repeat to write .txt file because it may be time-consuming.  
+    temp = fname.split('.prt5')
+    outtxt = temp[0]+".txt"
+    if os.path.exists(outtxt):
+        wrtxt=False
+    else:
+        wrtxt=True
+     
+    # Extract data from .prt5 data file
+    Time, XYZ, TAG, INFO = readPRTfile(fname, wrtxt)
+        
     T_END = len(Time)
     print ("Length of time axis in prt5 data file", T_END)
     print ("T_Initial=", Time[0])
@@ -479,9 +476,15 @@ def visualizeEvac(fname, fdsfile=None):
     T_INDEX=0
 
     if fdsfile!=None:
-        walls=readOBST(fdsfile)
-        doors=readHOLE(fdsfile)
-        exits=readEXIT(fdsfile)
+        #meshes, evacZmin, evacZmax = readMESH(fdsfile, 'evac')
+        #N_meshes = len(meshes)
+        #evacZoffset=0.5*(evacZmin+evacZmax)
+        
+        walls=readOBST(fdsfile, '&OBST', Zmin, Zmax)
+        holes=readPATH(fdsfile, '&HOLE', Zmin, Zmax)
+        exits=readPATH(fdsfile, '&EXIT', Zmin, Zmax)
+        doors=readPATH(fdsfile, '&DOOR', Zmin, Zmax)
+        entries=readPATH(fdsfile, '&ENTRY', Zmin, Zmax)
         
     
     ZOOMFACTOR=10.0
@@ -495,7 +498,6 @@ def visualizeEvac(fname, fdsfile=None):
     PAUSE=False
     REWIND=False
     FORWARD=False
-
     
     pygame.init()
     screen = pygame.display.set_mode([800, 350])
@@ -595,13 +597,22 @@ def visualizeEvac(fname, fdsfile=None):
             time_surface=myfont.render("Simulation Time:" + str(Time_t), True, (0,0,0), (255,255,255))
             screen.blit(time_surface, [620,300]) #[750,350]*ZOOMFACTOR)
 
-        drawWalls(screen, walls, ZOOMFACTOR, SHOWWALLDATA, xSpace, ySpace)
-        drawDoors(screen, doors, ZOOMFACTOR, SHOWDOORDATA, xSpace, ySpace)
-        drawExits(screen, exits, ZOOMFACTOR, SHOWEXITDATA, xSpace, ySpace)
-
-        print ("Show TAG_t: ", TAG_t)
-        for idai in range(np.size(TAG_t)):
+        if fdsfile!=None:
+            drawOBST(screen, walls, red, ZOOMFACTOR, SHOWWALLDATA, xSpace, ySpace)
+            drawPATH(screen, holes, green, ZOOMFACTOR, SHOWDOORDATA, xSpace, ySpace)
+            drawPATH(screen, exits, lightpink, ZOOMFACTOR, SHOWEXITDATA, xSpace, ySpace)
+            drawPATH(screen, doors, green, ZOOMFACTOR, SHOWEXITDATA, xSpace, ySpace)
+            drawPATH(screen, entries, purple, ZOOMFACTOR, SHOWEXITDATA, xSpace, ySpace)
             
+        print ("Show TAG_t: ", TAG_t)
+        
+        ################################
+        # Next step is drawing agents by using evac data
+        ################################  
+        for idai in range(np.size(TAG_t)):
+
+            if XYZ_t[2][idai]<Zmin or XYZ_t[2][idai]>Zmax:
+                continue
             #scPos = np.array([0, 0])
             scPos = [0, 0]
             scPos[0] = int(XYZ_t[0][idai]*ZOOMFACTOR+xSpace)
@@ -618,14 +629,13 @@ def visualizeEvac(fname, fdsfile=None):
         pygame.display.flip()
         clock.tick(20)
 
-
 if __name__ == "__main__":
     #if len(sys.argv)<2:
     #    sys.exit("Give .prt5 file as argument")
     #T,Q,labels,units =  readPRTfile(sys.argv[1])
     #print(labels,units)
     #print(len(T),Q.shape)
-    CHID=readCHID("Doorway.fds")
-    print CHID
+    CHID=readCHID("SMOKE_DET3.fds")
+    print (CHID)
     #readPRTfile(CHID+'_evac_0001.prt5')
-    visualizeEvac(CHID+'_evac_0001.npz', "Doorway.fds")
+    visualizeEvac(CHID+'_evac_0001.prt5', None) #"SMOKE_DET3.fds")

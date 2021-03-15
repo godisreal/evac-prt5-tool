@@ -7,7 +7,7 @@ from read_evac import *
 if sys.version_info[0] == 3: # Python 3
     from tkinter import *
     from tkinter.ttk import Notebook
-    import tkinter.tkfiledialog as tkf
+    import tkinter.filedialog as tkf
 else:
     # Python 2
     from Tkinter import *
@@ -166,16 +166,16 @@ class GUI(object):
 
     def readData(self):
         #self.setStatusStr("Read Prt5 Data! This action may take a few seconds or minutes, depending on the size of data file!")
-        if os.path.exists(self.FN[1]):
-            print('load .prt5 file and extract evac-related information', self.FN[1])
+        if os.path.exists(self.fname_EVAC):
+            print('load .prt5 file and extract evac-related information', self.fname_EVAC)
             #self.textInformation.insert(END, "\nRead Prt5 Data! This action may take a few seconds or minutes, depending on the size of data file!")
-            readPRTfile(self.FN[1])
+            readPRTfile(self.fname_EVAC)
             self.textInformation.insert(END, "\nRead Prt5 Data Successfully!\n")
             return
         
-        if os.path.exists(self.FN[0]):
-            print ('load .fds file and extract evac-related information', self.FN[0])
-            CHID=readCHID(self.FN[0])
+        if os.path.exists(self.fname_FDS):
+            print ('load .fds file and extract evac-related information', self.fname_FDS)
+            CHID=readCHID(self.fname_FDS)
             print CHID
 
             # The following lines are effective only for the latest version of fds as well as fds6_dump205.exe
@@ -201,38 +201,32 @@ class GUI(object):
         #myTest.quit()
         #self.setStatusStr("Visualize Prt5 Data by Pygame!")
         #self.textInformation.insert(END, "\nVisualize Prt5 Data by Pygame!\n")
-        if os.path.exists(self.FN[0]):
-            print ('load .fds file and extract evac-related information', self.FN[0])
-            CHID=readCHID(self.FN[0])
+        if os.path.exists(self.fname_FDS):
+            print ('load .fds file and extract evac-related information', self.fname_FDS)
+            CHID=readCHID(self.fname_FDS)
             print CHID
 
-            # The following lines are effective only for the latest version of fds as well as fds6_dump205.exe
-            # If you are using the old version of fds, please modify the code to read evac prt5 file.
-            if self.fname_EVAC is None:
-                if os.path.exists(CHID+'_evac_0001.npz'):
-                    pass
-                else:
-                    readPRTfile(CHID+'_evac_0001.prt5')
-                
-                sunpro1 = mp.Process(target=visualizeEvac(CHID+'_evac_0001.npz', self.FN[0]))
+            # The following lines are effective for the latest version of fds as well as previous version of fds.  
+            # If you are using the old version of fds, please select evac prt5 file.
+            if os.path.exists(self.fname_EVAC):       
+                sunpro1 = mp.Process(target=visualizeEvac(self.fname_EVAC, self.fname_FDS))
+                sunpro1.start()
+                sunpro1.join()
+            else:
+                sunpro1 = mp.Process(target=visualizeEvac(CHID+'_evac_0001.prt5', self.fname_FDS))
                 sunpro1.start()
                 sunpro1.join()
             #visualizeEvac(CHID+'_evac_0001.npz', self.FN[0])
-            else:
-                temp=self.fname_EVAC.split('.prt5')
-                fname_npz = temp[0]+'.npz'
-                if os.path.exists(fname_npz):
-                    pass
-                else:
-                    readPRTfile(self.fname_EVAC)
-                
-                sunpro1 = mp.Process(target=visualizeEvac(fname_npz, self.FN[0]))
+        else: # No file selected for fds
+            print("No file selected for fds input file")
+            if os.path.exists(self.fname_EVAC):
+                sunpro1 = mp.Process(target=visualizeEvac(self.fname_EVAC, None))
                 sunpro1.start()
                 sunpro1.join()
-        else: # No fname for .fds
-            print ("Input file %s does not exist!" %self.FN[0])
-            exit(-1)
-            
+            else:
+                print ("Input file %s does not exist!" %self.fname_FDS)
+                exit(-1)
+
 
 if __name__ == '__main__':
     myGUI=GUI()
