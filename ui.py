@@ -110,7 +110,7 @@ class GUI(object):
         self.buttonStart.pack()
         self.showHelp(self.buttonStart, "Visualize all data files selected!")
         #buttonStart.place(x=5,y=220)
-        print self.FN[0], self.FN[1]
+        print(self.FN[0], self.FN[1])
 
     def start(self):
         self.window.mainloop()
@@ -143,7 +143,7 @@ class GUI(object):
             self.lb1.config(text = "The EVAC data file selected: "+str(self.FN[index])+"\n")
         #elif index ==2:
         #    lb2.config(text = "The exit data file selected: "+str(FN[index])+"\n")
-        print 'fname', self.FN[index]
+        print('fname', self.FN[index])
         
     def selectFDSFile(self):
         self.fname_FDS = tkf.askopenfilename(filetypes=(("All files", "*.*"), ("fds files", "*.fds") ))
@@ -176,7 +176,7 @@ class GUI(object):
         if os.path.exists(self.fname_FDS):
             print ('load .fds file and extract evac-related information', self.fname_FDS)
             CHID=readCHID(self.fname_FDS)
-            print CHID
+            print(CHID)
 
             # The following lines are effective only for the latest version of fds as well as fds6_dump205.exe
             # If you are using the old version of fds, please modify the code to read evac prt5 file.
@@ -204,7 +204,7 @@ class GUI(object):
         if os.path.exists(self.fname_FDS):
             print ('load .fds file and extract evac-related information', self.fname_FDS)
             CHID=readCHID(self.fname_FDS)
-            print CHID
+            print(CHID)
 
             # The following lines are effective for the latest version of fds as well as previous version of fds.  
             # If you are using the old version of fds, please select evac prt5 file.

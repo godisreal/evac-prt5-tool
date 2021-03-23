@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on  Aug 2020
-
 @author: WP and Topi
 """
 
@@ -11,18 +10,6 @@ import os
 import struct
 import pygame
 import re
-from obst import *
-#from data_func import *
-#from draw_func import *
-
-#infile = open("test.prt5","rb")
-#outfile = open("output2.txt", "w")
-
-#filedata = infile.read()
-#filesize = infile.tell()
-#filedata2 = bytearray(filedata)
-#print filedata
-#print >> outfile, filedata
 
 ########################
 ##### Color Info as below ###
@@ -48,6 +35,149 @@ LightCyan = 224, 255, 255
 lightgreen = 193, 255, 193
 
 
+#######################
+####### debug flag  #######
+#######################
+debugReadFDS=True
+debugReadEVAC=True
+debugPygame=True
+
+
+def normalize(v):
+    norm=np.linalg.norm(v)
+    if norm==0:
+       return v
+    return v/norm
+
+
+class obst(object):
+    
+    """
+    id:
+        obstacle id 
+    mode: 
+        obstacle type (Line, Rect)
+    params:
+        Obstacle parameters according to the type. This in the form 
+        of: Line -> [x1,y1,x2,y2]
+        Rect -> [x,y,w,h] 
+    """
+    
+    def __init__(self, oid=0, mode='line', params=[0,0,0,0]):
+        
+        self.params = np.array([0.0, 0.0, 0.0, 0.0])
+        self.id = oid
+        self.mode = mode
+        
+        #self.startPx = np.array([params[0], params[1]])
+        #self.endPx = np.array([params[2], params[3]])
+        
+        #self.attachedDoors=[]
+        #self.isSingleWall = False
+        self.inComp = 1
+        self.arrow = 0
+        #self.direction = None #self.arrow*normalize(self.endPx - self.startPx)
+
+
+    def direction(self, arrow):
+        if self.mode=='line':
+            # Direction: (StartX, StartY) --> (EndX, EndY)
+            direction = -np.array([self.params[0], self.params[1]]) -np.array([self.params[2], self.params[3]])
+            direction = normalize(direction)
+            if arrow>0:
+                return direction
+            elif arrow<0:
+                return -direction
+            elif arrow==0:
+                return np.array([0.0, 0.0])
+        
+        elif self.mode=='rect':
+            pass
+            # What is a good representation of no direction?  
+            direction = None  # np.array([0.0, 0.0])  #NaN
+
+            ### +1: +x
+            ###  -1: -x
+            ### +2: +y
+            ###  -2: -y 
+            if arrow == 1:
+                direction = np.array([1.0, 0.0])
+            elif arrow == -1:
+                direction = np.array([-1.0, 0.0])
+            elif arrow == 2:
+                direction = np.array([0.0, 1.0])
+            elif arrow == -2:
+                direction = np.array([0.0, -1.0])
+            elif arrow == 0:
+                direction = np.array([0.0, 0.0])
+            return direction
+    
+    
+
+class passage(object):
+    
+    """
+    id:
+        door id 
+    mode: 
+        door type (Rect, Circle)
+    params:
+        Obstacle parameters according to the type. This in the form 
+        of: Rect -> [x,y,w,h] 
+        Circle -> [x,y,r,None]
+    """
+    
+    def __init__(self, oid=0, mode='rect', params=[0,0,0,0]):
+        
+        self.params = np.array([0.0, 0.0, 0.0, 0.0])
+        self.id = oid
+        self.mode = 'rect' # All the door are in form of rect
+        self.exitSign = 0
+
+        #self.startPx = np.array([params[0], params[1]])
+        #self.endPx = np.array([params[2], params[3]])
+
+        self.attachedWalls=[]
+        self.inComp = 1
+        self.isSingleDoor = False
+        self.arrow = 1
+        #self.direction = None #self.arrow*normalize(self.endPx - self.startPx)
+        self.pos = (np.array([self.params[0], self.params[1]]) + np.array([self.params[2], self.params[3]]))*0.5
+
+
+    def direction(self, arrow):
+        ### +1: +x
+        ###  -1: -x
+        ### +2: +y
+        ###  -2: -y 
+        if arrow == 1:
+            direction = -np.array([self.params[0], self.params[3]]) -np.array([self.params[2], self.params[3]])
+            direction = normalize(direction)
+            direction = np.array([1.0, 0.0])
+        elif arrow == -1:
+            direction = np.array([self.params[0], self.params[3]]) -np.array([self.params[2], self.params[3]])
+            direction = normalize(direction)
+            direction = np.array([-1.0, 0.0])
+        elif arrow == 2:
+            direction = -np.array([self.params[0], self.params[1]]) -np.array([self.params[0], self.params[3]])
+            direction = normalize(direction)
+            direction = np.array([0.0, 1.0])
+        elif arrow == -2:
+            direction = np.array([self.params[0], self.params[1]]) -np.array([self.params[0], self.params[3]])
+            direction = normalize(direction)
+            direction = np.array([0.0, -1.0])
+        elif arrow == 0:
+            direction = np.array([0.0, 0.0])
+        return direction
+            
+    def edge(self):
+        p1 = np.array([self.params[0], self.params[1]])
+        p2 = np.array([self.params[0], self.params[3]])
+        p3 = np.array([self.params[2], self.params[3]])
+        p4 = np.array([self.params[2], self.params[1]])
+        return p1, p2, p3, p4
+
+
 def readCHID(FileName):
 
     findHEAD=False
@@ -67,8 +197,8 @@ def readCHID(FileName):
           #      result = keyInfo.split(',')
           #  return result[0].strip('\'')
             
-
-def readOBST(FileName, Keyword='&OBST', Zmin=0.0, Zmax=3.0, outputFile=None, ShowData=False):
+# Read in obstruction from a FDS input file
+def readOBST(FileName, Keyword='&OBST', Zmin=0.0, Zmax=3.0):
     #fo = open("OBSTout.txt", "w+")
     obstFeatures = []
     findOBST=False
@@ -78,14 +208,17 @@ def readOBST(FileName, Keyword='&OBST', Zmin=0.0, Zmax=3.0, outputFile=None, Sho
         if  findOBST:
             if re.search('XB', line):
                 temp1=line.split('XB')
-                line1=temp1[1]
-                temp =  line1.split('=')
-                dataXYZ = temp[1]
-                coords = dataXYZ.split(',')
-                #if float(coords[4])<Zmin and float(coords[5])<Zmin:
-                #    continue
-                #if float(coords[4])>Zmax and float(coords[5])>Zmax:
-                #    continue
+                dataXYZ=temp1[1].strip('= ')
+                #line1=temp1[1].strip('= ')
+                #temp =  line1.split('=')
+                #dataXYZ = temp[1].strip()
+                coords = re.split(r'[\s\,]+', dataXYZ)
+                if debugReadFDS:
+                    print(coords)
+                if float(coords[4])<Zmin and float(coords[5])<Zmin:
+                    continue
+                if float(coords[4])>Zmax and float(coords[5])>Zmax:
+                    continue
                 obstFeature = []
                 obstFeature.append(float(coords[0]))
                 obstFeature.append(float(coords[2]))
@@ -94,23 +227,12 @@ def readOBST(FileName, Keyword='&OBST', Zmin=0.0, Zmax=3.0, outputFile=None, Sho
                 obstFeatures.append(obstFeature)
                 findOBST=False
 
-            if ShowData:
+            if debugReadFDS:
                 print (line, '\n', obstFeature)
-                #print >>fo, line
-                #print >>fo, obstFeature
 
     #print >>fo, 'test\n'
     #print >>fo, 'OBST Features\n'
     #print >>fo, obstFeatures
-    
-    if outputFile!=None:
-        with open(outputFile, mode='wb+') as obst_test_file:
-            csv_writer = csv.writer(obst_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            csv_writer.writerow(['--', '0/startX', '1/startY', '2/endX', '3/endY', '4/mode', '5/id', '6/inComp', '7/arrow'])
-            index_temp=0
-            for obstFeature in obstFeatures:
-                csv_writer.writerow(['--', str(obstFeature[0]), str(obstFeature[1]), str(obstFeature[2]), str(obstFeature[3]), 'rect', str(index_temp), '1', '0'])
-                index_temp=index_temp+1
     
     walls = []
     index = 0
@@ -128,8 +250,8 @@ def readOBST(FileName, Keyword='&OBST', Zmin=0.0, Zmax=3.0, outputFile=None, Sho
         index = index+1
     return walls
 
-
-def readPATH(FileName, Keyword='&HOLE', Zmin=0.0, Zmax=3.0, outputFile=None, ShowData=False):
+# Read in paths from a FDS input file
+def readPATH(FileName, Keyword='&HOLE', Zmin=0.0, Zmax=3.0):
     #fo = open("HOLEout.txt", "w+")
     holeFeatures = []
     
@@ -141,15 +263,17 @@ def readPATH(FileName, Keyword='&HOLE', Zmin=0.0, Zmax=3.0, outputFile=None, Sho
         if  findPATH:
             if re.search('XB', line):
                 temp1=line.split('XB')
-                line1=temp1[1]
-                temp =  line1.split('=')
-                dataXYZ = temp[1]
-                    
-                coords = dataXYZ.split(',')
-                #if float(coords[4])<Zmin and float(coords[5])<Zmin:
-                #    continue
-                #if float(coords[4])>Zmax and float(coords[5])>Zmax:
-                #    continue
+                dataXYZ=temp1[1].strip('= ')
+                #line1=temp1[1]
+                #temp =  line1.split('=')
+                #dataXYZ = temp[1].strip()    
+                coords = re.split(r'[\s\,]+', dataXYZ)
+                if debugReadFDS:
+                    print(coords)
+                if float(coords[4])<Zmin and float(coords[5])<Zmin:
+                    continue
+                if float(coords[4])>Zmax and float(coords[5])>Zmax:
+                    continue
                 holeFeature = []
                 holeFeature.append(float(coords[0]))
                 holeFeature.append(float(coords[2]))
@@ -158,23 +282,14 @@ def readPATH(FileName, Keyword='&HOLE', Zmin=0.0, Zmax=3.0, outputFile=None, Sho
                 holeFeatures.append(holeFeature)
                 findPATH=False
 
-                if ShowData:
+                if debugReadFDS:
                     print (line, '\n', holeFeature)
                     #print >>fo, line
                     #print >>fo, holeFeature
 
-    #print >>fo, 'test\n'
-    #print >>fo, 'HOLE Features\n'
-    #print >>fo, holeFeatures
-
-    if outputFile!=None:
-        with open(outputFile, mode='wb+') as door_test_file:
-            csv_writer = csv.writer(door_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            csv_writer.writerow(['--', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/id', '6/inComp', '7/exitSign'])
-            index_temp=0
-            for holeFeature in holeFeatures:
-                csv_writer.writerow(['--', str(holeFeature[0]), str(holeFeature[1]), str(holeFeature[2]), str(holeFeature[3]), '0', str(index_temp), '1', '0'])
-                index_temp=index_temp+1
+    #print ('test\n')
+    #print ('HOLE Features\n')
+    #print (holeFeatures)
 
     doors = []
     index = 0
@@ -256,9 +371,9 @@ def readEXIT(FileName, Zmin=0.0, Zmax=3.0, outputFile=None, ShowData=False):
     return exits
 
 
-####################
+#######################
 # Drawing the obstructions
-####################
+#######################
 def drawOBST(screen, walls, color, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace=0.0):
 
     xyShift = np.array([xSpace, ySpace])
@@ -350,7 +465,7 @@ def drawPATH(screen, doors, color, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, 
 
 ##############################
 # The function readFRec is mainly written by Topi
-#Read fortran record, return payload as bytestring
+# Read fortran record, return payload as bytestring
 def readFRec(infile,fmt):
     len1   = infile.read(4)
     if not len1:
@@ -470,9 +585,10 @@ def visualizeEvac(fname, fdsfile=None, Zmin=0.0, Zmax=3.0):
     Time, XYZ, TAG, INFO = readPRTfile(fname, wrtxt)
         
     T_END = len(Time)
-    print ("Length of time axis in prt5 data file", T_END)
-    print ("T_Initial=", Time[0])
-    print ("T_Final=", Time[T_END-1])
+    if debugPygame:
+        print ("Length of time axis in prt5 data file", T_END)
+        print ("T_Initial=", Time[0])
+        print ("T_Final=", Time[T_END-1])
     T_INDEX=0
 
     if fdsfile!=None:
@@ -603,8 +719,9 @@ def visualizeEvac(fname, fdsfile=None, Zmin=0.0, Zmax=3.0):
             drawPATH(screen, exits, lightpink, ZOOMFACTOR, SHOWEXITDATA, xSpace, ySpace)
             drawPATH(screen, doors, green, ZOOMFACTOR, SHOWEXITDATA, xSpace, ySpace)
             drawPATH(screen, entries, purple, ZOOMFACTOR, SHOWEXITDATA, xSpace, ySpace)
-            
-        print ("Show TAG_t: ", TAG_t)
+
+        if debugPygame:
+            print ("Show TAG_t: ", TAG_t)
         
         ################################
         # Next step is drawing agents by using evac data
@@ -635,7 +752,8 @@ if __name__ == "__main__":
     #T,Q,labels,units =  readPRTfile(sys.argv[1])
     #print(labels,units)
     #print(len(T),Q.shape)
-    CHID=readCHID("SMOKE_DET3.fds")
+    CHID=readCHID('./examples/'+'SMOKE_DET3.fds')
     print (CHID)
     #readPRTfile(CHID+'_evac_0001.prt5')
-    visualizeEvac(CHID+'_evac_0001.prt5', None) #"SMOKE_DET3.fds")
+    #visualizeEvac(CHID+'_evac_0001.prt5', None) #"SMOKE_DET3.fds")
+    visualizeEvac('./examples/'+CHID+'_evac_0001.prt5', './examples/'+'SMOKE_DET3.fds', 0.0, 3.0)
