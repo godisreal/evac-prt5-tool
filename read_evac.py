@@ -42,7 +42,7 @@ debugReadFDS=True
 debugReadEVAC=True
 debugPygame=True
 
-
+# Normalize a vector
 def normalize(v):
     norm=np.linalg.norm(v)
     if norm==0:
@@ -50,6 +50,8 @@ def normalize(v):
     return v/norm
 
 
+# There are two types of entities in buidling construction: obstruction and passage
+# Define obstruction class as below, and obstruction specifies the area that an agent cannot go through
 class obst(object):
     
     """
@@ -113,7 +115,8 @@ class obst(object):
             return direction
     
     
-
+# There are two types of entities in buidling construction: obstruction and passage
+# Define passage class as below, and passage specifies the area that an agent can go through, and it may include doorways, exits, etc.  We can also brief this entity as path in our code.  
 class passage(object):
     
     """
@@ -178,6 +181,7 @@ class passage(object):
         return p1, p2, p3, p4
 
 
+# Read in the job name CHID from a FDS input file
 def readCHID(FileName):
 
     findHEAD=False
@@ -196,6 +200,7 @@ def readCHID(FileName):
           #      keyInfo = temp2[1]
           #      result = keyInfo.split(',')
           #  return result[0].strip('\'')
+ 
             
 # Read in obstruction from a FDS input file
 def readOBST(FileName, Keyword='&OBST', Zmin=0.0, Zmax=3.0):
@@ -250,7 +255,7 @@ def readOBST(FileName, Keyword='&OBST', Zmin=0.0, Zmax=3.0):
         index = index+1
     return walls
 
-# Read in paths from a FDS input file
+# Read in passage from a FDS input file
 def readPATH(FileName, Keyword='&HOLE', Zmin=0.0, Zmax=3.0):
     #fo = open("HOLEout.txt", "w+")
     holeFeatures = []
@@ -511,7 +516,7 @@ def readPRTfile(fname, wrtxt = True, max_time=np.Inf, mode='evac'):
             q_labels.append(smv_label)
     Q=[]
     T  = []
-    diam =[]
+    #diam =[] ??? Not used in this program
     XYZ = []
     TAG = []
     while True:
@@ -551,6 +556,195 @@ def readPRTfile(fname, wrtxt = True, max_time=np.Inf, mode='evac'):
     #np.savez( outfn + ".npz", T, XYZ, TAG, Q)
     #return (np.array(T),np.hstack(Q),q_labels,q_units)
     return T, XYZ, TAG, Q
+
+
+def visualizeAgents(fname, fdsfile=None, Zmin=0.0, Zmax=3.0, agents = None):
+    
+    # Because visualizeEvac is a 2D visualizer, we can only show agents in a single floors each time and if there are multiple floors in fds+evac simulation, users should specify which floor they want to visualize.  Otherwise there will be overlap of agents in different floors.  The default values are given by Zmin=0.0 and Zmax=3.0, which means the gound floor approximately.  
+ 
+     # Therefore It is recommended for users to first open .fds input file to see if there are multiple floors.  User should specify Zmin and Zmax and agents are visualized in z axis between Zmin and Zmax.  
+        
+    #Zmin is the lower bound of z values in a floor (e.g., often z lower bound of an evacuation mesh)
+    #Zmax is the upper bound of z values in a floor (e.g., often z upper bound of an evacuation mesh)
+    
+    # Agents define a list of agents to be visualized in pygame screen
+    
+    # If there are already .txt data extracted from .prt5 file, the visualizer will not repeat to write .txt file because it may be time-consuming.  
+    temp = fname.split('.prt5')
+    outtxt = temp[0]+".txt"
+    if os.path.exists(outtxt):
+        wrtxt=False
+    else:
+        wrtxt=True
+     
+    # Extract data from .prt5 data file
+    Time, XYZ, TAG, INFO = readPRTfile(fname, wrtxt)
+        
+    T_END = len(Time)
+    if debugPygame:
+        print ("Length of time axis in prt5 data file", T_END)
+        print ("T_Initial=", Time[0])
+        print ("T_Final=", Time[T_END-1])
+    T_INDEX=0
+
+    if fdsfile!=None:
+        #meshes, evacZmin, evacZmax = readMESH(fdsfile, 'evac')
+        #N_meshes = len(meshes)
+        #evacZoffset=0.5*(evacZmin+evacZmax)
+        
+        walls=readOBST(fdsfile, '&OBST', Zmin, Zmax)
+        holes=readPATH(fdsfile, '&HOLE', Zmin, Zmax)
+        exits=readPATH(fdsfile, '&EXIT', Zmin, Zmax)
+        doors=readPATH(fdsfile, '&DOOR', Zmin, Zmax)
+        entries=readPATH(fdsfile, '&ENTRY', Zmin, Zmax)
+        
+    
+    ZOOMFACTOR=10.0
+    xSpace=20.0
+    ySpace=20.0
+    MODETRAJ=False
+    SHOWTIME=True
+    SHOWWALLDATA=True
+    SHOWDOORDATA=True
+    SHOWEXITDATA=True
+    PAUSE=False
+    REWIND=False
+    FORWARD=False
+    
+    pygame.init()
+    screen = pygame.display.set_mode([800, 350])
+    pygame.display.set_caption('Visualize prt5 file for evac simulation')
+    clock = pygame.time.Clock()
+    #screen.fill(white)
+
+    #myfont=pygame.font.SysFont("arial",16)
+    #text_surface=myfont.render("No2",True, (0,0,0), (255,255,255))
+    #screen.blit(text_surface, (16,20))
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                pygame.display.quit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                (mouseX, mouseY) = pygame.mouse.get_pos()
+                #button = pygame.mouse.get_pressed()            
+            # elif event.type == pygame.MOUSEBUTTONUP:
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_PAGEUP:
+                    ZOOMFACTOR = ZOOMFACTOR +1
+                elif event.key == pygame.K_PAGEDOWN:
+                    ZOOMFACTOR = max(6.0, ZOOMFACTOR -1)
+                elif event.key == pygame.K_t:
+                    MODETRAJ = not MODETRAJ
+                elif event.key == pygame.K_SPACE:
+                    PAUSE = not PAUSE
+                elif event.key == pygame.K_HOME:
+                    REWIND = True
+                    PAUSE = True
+                    #xSpace=xSpace-10
+                elif event.key == pygame.K_END:
+                    FORWARD = True
+                    PAUSE = True
+                    #xSpace=xSpace+10
+                #elif event.key == pygame.K_v:
+                 #   simu.SHOWVELOCITY = not simu.SHOWVELOCITY
+                #elif event.key == pygame.K_i:
+                 #   simu.SHOWINDEX = not simu.SHOWINDEX
+                #elif event.key == pygame.K_d:
+                 #   simu.DRAWDOORFORCE = not simu.DRAWDOORFORCE
+                #elif event.key == pygame.K_r:
+                #    simu.DRAWSELFREPULSION = not simu.DRAWSELFREPULSION
+                elif event.key == pygame.K_KP1:
+                    SHOWWALLDATA = not SHOWWALLDATA
+                elif event.key == pygame.K_KP2:
+                    SHOWDOORDATA = not SHOWDOORDATA
+                elif event.key == pygame.K_KP3:
+                    SHOWEXITDATA = not SHOWEXITDATA
+                #elif event.key == pygame.K_s:
+                #    simu.SHOWSTRESS = not simu.SHOWSTRESS
+                elif event.key == pygame.K_UP:
+                    ySpace=ySpace-10
+                elif event.key == pygame.K_DOWN:
+                    ySpace=ySpace+10
+                elif event.key == pygame.K_LEFT:
+                    xSpace=xSpace-10
+                elif event.key == pygame.K_RIGHT:
+                    xSpace=xSpace+10
+
+        if MODETRAJ == False:
+            screen.fill([0,0,0])
+
+        #Time  = readFRec(fin,'f')  # Time index
+        if T_INDEX == None or T_INDEX==T_END-1:
+            print("Simulation End!")
+            #running=False
+            #pygame.display.quit()
+            PAUSE=True
+        else:
+            if PAUSE==False:
+                T_INDEX = T_INDEX+1
+            else:
+                if REWIND and T_INDEX>0:
+                    T_INDEX = T_INDEX-1
+                if FORWARD and T_INDEX<T_END-1:
+                    T_INDEX = T_INDEX+1
+        #nplim = readFRec(fin,'I')  # Number of particles in the PART class
+        
+        Time_t = Time[T_INDEX]
+        XYZ_t = XYZ[T_INDEX]
+        TAG_t = TAG[T_INDEX]
+        INFO_t = INFO[T_INDEX]
+
+        #############################
+        ######### Drawing Process ######
+        xyShift = np.array([xSpace, ySpace])
+
+        ####################
+        # Showing Time
+        ####################
+        if SHOWTIME:
+            myfont=pygame.font.SysFont("arial",14)
+            time_surface=myfont.render("Simulation Time:" + str(Time_t), True, (0,0,0), (255,255,255))
+            screen.blit(time_surface, [620,300]) #[750,350]*ZOOMFACTOR)
+
+        if fdsfile!=None:
+            drawOBST(screen, walls, red, ZOOMFACTOR, SHOWWALLDATA, xSpace, ySpace)
+            drawPATH(screen, holes, green, ZOOMFACTOR, SHOWDOORDATA, xSpace, ySpace)
+            drawPATH(screen, exits, lightpink, ZOOMFACTOR, SHOWEXITDATA, xSpace, ySpace)
+            drawPATH(screen, doors, green, ZOOMFACTOR, SHOWEXITDATA, xSpace, ySpace)
+            drawPATH(screen, entries, purple, ZOOMFACTOR, SHOWEXITDATA, xSpace, ySpace)
+
+        if debugPygame:
+            print ("Show TAG_t: ", TAG_t)
+
+        # This is due to readFRec:.  Let x become [x] when x is a scalar 
+        if np.size(TAG_t)==1:
+            TAG_t = np.array([TAG_t])
+        ################################
+        # Next step is drawing agents by using evac data
+        ################################  
+        for idai, ai in enumerate(TAG_t):
+            if ai not in agents: 
+                continue
+            if XYZ_t[2][idai]<Zmin or XYZ_t[2][idai]>Zmax:
+                continue
+            #scPos = np.array([0, 0])
+            scPos = [0, 0]
+            scPos[0] = int(XYZ_t[0][idai]*ZOOMFACTOR+xSpace)
+            scPos[1] = int(XYZ_t[1][idai]*ZOOMFACTOR+ySpace)
+            
+            color_para = [255, 0, 0]
+            #color_para[0] = int(255*min(1, agent.ratioV))
+            pygame.draw.circle(screen, color_para, scPos, int(2.0), 2)
+            #pygame.draw.circle(screen, color_para, scPos, int(0.2*ZOOMFACTOR), 2)
+            #int(agent.radius*ZOOMFACTOR), LINEWIDTH)
+
+        REWIND=False
+        FORWARD=False
+        pygame.display.flip()
+        clock.tick(20)
 
 
 def visualizeEvac(fname, fdsfile=None, Zmin=0.0, Zmax=3.0):
@@ -756,4 +950,5 @@ if __name__ == "__main__":
     print (CHID)
     #readPRTfile(CHID+'_evac_0001.prt5')
     #visualizeEvac(CHID+'_evac_0001.prt5', None) #"SMOKE_DET3.fds")
-    visualizeEvac('./examples/'+CHID+'_evac_0001.prt5', './examples/'+'SMOKE_DET3.fds', 0.0, 3.0)
+    visualizeAgents('./examples/'+CHID+'_evac_0001.prt5', './examples/'+'SMOKE_DET3.fds', 0.0, 3.0, [1,18, 42])
+    #visualizeEvac('./examples/'+CHID+'_evac_0001.prt5', './examples/'+'SMOKE_DET3.fds', 0.0, 3.0)
