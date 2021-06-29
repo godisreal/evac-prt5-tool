@@ -1,0 +1,190 @@
+ FDS+Evac version: FDS+Evac 6.5.3
+ All material properties etc. are completely fabricated.
+
+An Example To Test Smoke Detector
+
+&HEAD CHID='SmokeDet3',TITLE='WPWORK' /
+
+&MESH IJK=39,24,3, XB=-0.6,30.6, -0.6,18.6, 0.0,3.0 /
+
+&MESH IJK=156,96,1, XB=-0.6,30.6, -0.6,18.6, 0.4,1.6, EVACUATION=.TRUE., EVAC_HUMANS=.TRUE., EVAC_Z_OFFSET=1.0, ID = 'MainEvacGrid01' /
+
+&TIME T_END = 160.0, DT=0.2 /
+
+&MISC SURF_DEFAULT = 'WALL',
+      RADIATION=.FALSE.
+	  EVAC_SURF_DEFAULT = 'EVAC_WALL',  
+	  EVACUATION_DRILL=.True.  
+	  EVACUATION_MC_MODE=.true. /
+
+&DUMP SMOKE3D=.TRUE.,
+      NFRAMES=200,
+      DT_PART=0.5,
+      DT_HRR=10.0,
+      DT_SLCF=10.0,
+      DT_BNDF=5.0,
+      DT_PL3D=1000.0,
+      DT_ISOF=5.0 
+	  DT_DEVC=2.0 /
+
+REAC ID         = 'POLYURETHANE'
+      FYI        = 'C_6.3 H_7.1 N O_2.1, NFPA Handbook, Babrauskas'
+      SOOT_YIELD = 0.10
+      N          = 1.0
+      C          = 6.3
+      H          = 7.1
+      O          = 2.1  /
+
+SURF ID='BURNER', HRRPUA=1000., COLOR='RASPBERRY' /
+
+&MATL ID            = 'GYPSUM PLASTER'
+      FYI           = 'Quintiere, Fire Behavior'
+      CONDUCTIVITY  = 0.48
+      SPECIFIC_HEAT = 0.84
+      DENSITY       = 1440. /
+
+&SURF ID             = 'WALL'
+      RGB            = 160,160,160
+      MATL_ID        = 'GYPSUM PLASTER'
+      THICKNESS      = 0.012 /
+
+ Boundary condition for the evacuation flow fields:
+&SURF ID = 'OUTFLOW', VEL = +0.000001, TAU_V=0.1 /
+
+ Default material for evacuation meshes is INERT and its color
+ can not be changed esily in Smokeview. Thus, an evacuation 
+ material is defined below, which has only color:
+&SURF ID    = 'EVAC_WALL'
+      RGB   = 200,0,200 / or COLOR
+	  
+	  
+=======================================================
+============= FIRE FDS GEOMETRY STARTS ================
+=======================================================
+
+Basic Outlines
+&OBST XB = 0.0, 30.0, 17.9,18.0, 0.0,3.0, SURF_ID='WALL' / 
+&OBST XB = 0.0, 30.0, 0.0, 0.2, 0.0,3.0, SURF_ID='WALL' /
+&OBST XB = 0.0, 0.1,  0.0,18.0, 0.0,3.0, SURF_ID='WALL' /
+&OBST XB = 30.0,30.1, 0.0,18.0, 0.0,3.0, SURF_ID='WALL' / 
+
+&OBST XB=20.0,20.1, 0.0,18.0, 0.0,3.0, COLOR='PURPLE' / 
+&HOLE XB=19.8,20.2, 3.5,6.0,  0.0,2.0, COLOR='RED', TRANSPARENCY=0.75, DEVC_ID='timer 1' / 
+HOLE XB=0.25,0.45,0.70,0.80,0.70,0.80, COLOR='GREEN', DEVC_ID='timer 2' / 
+OBST XB=0.70,0.80,0.20,0.30,0.20,0.30, COLOR='BLUE',  DEVC_ID='timer 3' / 
+
+&DEVC XYZ=0.1,0.1,0.1, ID='timer 1', SETPOINT= 60.0, QUANTITY='TIME', INITIAL_STATE=.TRUE./
+DEVC XYZ=0.2,0.1,0.1, ID='timer 2', SETPOINT= 2.0, QUANTITY='TIME', INITIAL_STATE=.TRUE. /
+DEVC XYZ=0.1,0.1,0.1, ID='timer 3', SETPOINT= 3.0, QUANTITY='TIME', INITIAL_STATE=.FALSE./
+
+At the start of the simulation, the purple obstruction is present with a red block embedded in it. This red block is actually a HOLE whose initial state is .FALSE., i.e., the hole is filled. Also at the start of the simulation, there is a pink obstruction that is visible. At 1 s the red block disappears. At 2 s the empty hole in the purple obstruction is filled with a green block. This hole was initially true, i.e. empty. The blue obstruction appears at 3 s because its initial state is false, meaning that it does not exist initially.
+
+
+The fire as a burner.
+&OBST XB= 28.50, 29.50, 10.00, 11.00, 0.00, 0.60, SURF_ID='INERT' /
+&VENT XB= 28.50, 29.50, 10.00, 11.00, 0.60, 0.60, SURF_ID='BURNER' /
+
+&VENT MB='YMIN',SURF_ID='OPEN' / 
+&VENT MB='YMAX',SURF_ID='OPEN' / 
+
+=======================================================
+============= FIRE FDS GEOMETRY ENDS ==================
+=======================================================
+
+===============evacuation===================
+
+&EXIT ID='Exit1', IOR = -1,
+      FYI = 'UpperLeft',
+      COUNT_ONLY=.FALSE.,
+      XYZ= 0.3, 16.0, 1.0,
+      XB = 0.2,0.2,  15.0,17.0, 0.4,1.6 /
+
+&EXIT ID='Exit2', IOR = -1,
+      FYI = 'UpperLeft',
+      COUNT_ONLY=.FALSE.,
+      XYZ= 0.3, 3.0, 1.0,
+      XB = 0.2,0.2,  2.0,4.0, 0.4,1.6 /
+	  
+&EXIT ID='Exit3', IOR = +1,
+      FYI = 'LowerRight',
+      COUNT_ONLY=.FALSE.,
+      XYZ= 29.8, 3.8, 1.0,
+      XB = 29.8,29.8,  3.0,4.6, 0.4,1.6,
+	  TIME_CLOSE=60.0 /
+	
+
+&PERS ID='Adult',
+      FYI='Male+Female diameter and velocity',
+      DEFAULT_PROPERTIES='Adult',
+      VELOCITY_DIST=1, 
+	VEL_LOW=0.38,VEL_HIGH=0.61,
+      PRE_EVAC_DIST=0, PRE_MEAN=0.0,
+      DET_EVAC_DIST=0, DET_MEAN=0.0,
+      COLOR_METHOD = 0,
+	DENS_INIT=6.0 
+      OUTPUT_SPEED = .TRUE.
+      OUTPUT_FED = .TRUE.
+	OUTPUT_CONTACT_FORCE = .TRUE.
+	OUTPUT_TOTAL_FORCE = .TRUE.
+ 	OUTPUT_MOTIVE_FORCE = .TRUE. 
+	OUTPUT_DENSITY = .TRUE. 
+	I_HERDING_TYPE = 0 /
+
+Initial position of the humans
+
+&EVAC ID = 'Group_1', 
+      NUMBER_INITIAL_PERSONS = 30,
+      FYI = 'Comment line',
+	XB = 1.0,6.0, 10.0,16.0, 1.0,1.0
+	AVATAR_COLOR = 'BLUE',
+	KNOWN_DOOR_NAMES = 'Exit1','Exit3'
+	KNOWN_DOOR_PROBS = 1.0, 1.0
+      PERS_ID = 'Adult' /  
+
+&EVAC ID = 'Group_2', 
+      NUMBER_INITIAL_PERSONS = 20,
+      FYI = 'Comment line',
+	XB = 1.0,6.0, 2.0,8.0, 1.0,1.0
+	AVATAR_COLOR = 'RED',
+	KNOWN_DOOR_NAMES = 'Exit1','Exit2','Exit3'
+	KNOWN_DOOR_PROBS = 0.3, 0.6, 0.7
+        PERS_ID = 'Adult' /
+
+
+===============detector=============
+
+reaction time delay or detection time delay are specified as below
+NOTE: They do not work currently??
+
+PROP ID='Smoke Detector', SMOKEVIEW_ID='smoke_detector', QUANTITY='CHAMBER OBSCURATION', LENGTH=1.8, ACTIVATION_OBSCURATION=3.24 /
+DEVC ID='SD', PROP_ID='Smoke Detector', XYZ=16.5, 10.5, 2.4 /
+
+PROP ID='Acme Heat', SMOKEVIEW_ID='heat_detector', QUANTITY='LINK TEMPERATURE', RTI=50.0, ACTIVATION_TEMPERATURE=44.0 /
+DEVC ID='HeatDet', PROP_ID='Acme Heat', XYZ=23.5, 10.5, 2.4 /
+
+
+==========Sprinkler==============
+
+SPEC ID='WATER VAPOR'/
+
+PART ID='Water',
+      SPEC_ID='WATER VAPOR',
+      DIAMETER=500.0,
+      MONODISPERSE=.TRUE.,
+      AGE=60.0,
+      SAMPLING_FACTOR=1/
+
+PROP ID='Water Spray',
+      PART_ID='Water',
+      FLOW_RATE=1.0,
+	  SMOKEVIEW_ID='sprinkler_upright', 
+      PARTICLE_VELOCITY=5.0,
+      SPRAY_ANGLE=60.0,75.0 /
+	  
+DEVC ID='SPRK', PROP_ID='Water Spray', XYZ=23.0,13.5,2.4, QUANTITY='TEMPERATURE', SETPOINT=64.0/
+
+DEVC ID='SPRK', PROP_ID='Water Spray', XYZ=23.0,6.5,2.4, QUANTITY='TEMPERATURE', SETPOINT=64.0/
+
+DEVC ID='SPRK', PROP_ID='Water Spray', XYZ=13.0,10.5,2.4, QUANTITY='TEMPERATURE', SETPOINT=64.0/
+
+&TAIL /
