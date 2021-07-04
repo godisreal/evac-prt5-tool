@@ -1,0 +1,122 @@
+ FDS+Evac version: FDS 5.4.1, Evac 2.2.0
+ All material properties etc. are completely fabricated.
+
+ A geometry, which can be used to calculate specific human
+ flows in corridors (i.e., "fundamental diagram")
+
+&HEAD CHID= 'CorridorFlowExample' ,TITLE= 'Corridor 10x10 m inner square' /
+ width 2 m, area 96 m2
+
+&MESH IJK=75,75,1, XB=-0.5,14.5, -0.5,14.5, 1.45,1.55, EVACUATION=.TRUE.,
+      EVAC_HUMANS=.TRUE., EVAC_Z_OFFSET=1.5, ID='FlowF' /
+&MESH IJK=75,75,1, XB=-0.5,14.5, -0.5,14.5, 1.45,1.55, EVACUATION=.TRUE.,
+      EVAC_HUMANS=.FALSE., ID='FlowTmp' /
+
+&TIME T_END= 100, DT= 0.1 /
+
+&MISC SURF_DEFAULT='INERT',
+      EVAC_SURF_DEFAULT='INERT',
+      RADIATION=.FALSE., /
+
+&DUMP SMOKE3D=.FALSE.,
+      NFRAMES=100,
+      DT_PART=0.5,
+      DT_HRR =1.0,
+      DT_SLCF=1.0,
+      DT_BNDF=1000000.0,
+      DT_PL3D=1000000.0,
+      DT_ISOF=1000000.0 /
+
+&SURF ID='OUTFLOW' ,VEL= +0.000001 ,TAU_V=0.1 /
+&SURF ID='INFLOW' , VEL= -0.000001 ,TAU_V=0.1 /
+ SURF ID='JETFAN' ,VEL= +0.000001 ,TAU_V=0.1, POROUS=.TRUE. /
+
+&OBST XB= -0.5,  0.0, -.5,14.5, 0.0,2.0,  SURF_ID='INERT' /
+&OBST XB= 14.0, 14.5, -.5,14.5, 0.0,2.0,  SURF_ID='INERT' /
+&OBST XB= -0.5, 14.5, -.5, 0.0, 0.0,2.0,  SURF_ID='INERT' /
+&OBST XB= -0.5, 14.5,14.0,14.5, 0.0,2.0,  SURF_ID='INERT' /
+&OBST XB=  2.0, 12.0, 2.0,12.0, 0.0,2.0,  SURF_ID='INERT' /
+
+ NOTE: In FDS5 a VENT can not be "hanging on the air" anymore,
+       so it must be on a solid obstacle. So the flow field
+       for humans must be calculated so, that there is an
+       obstacle in the corridor. But the main evacuation mesh
+       for humans can not have this obstacle (humans should be
+       free to move in the corridor...). ==> Thus, two evacuation
+       meshes are needed: One for the moving humans (main evacuation
+       mesh) and the second for the circular flow field.
+&VENT XB= 0.0, 2.0, 6.0,6.0, 1.45,1.55, SURF_ID='OUTFLOW', 
+      MESH_ID='FlowTmp', EVACUATION=.TRUE. /
+&VENT XB= 0.0, 2.0, 6.2,6.2, 1.45,1.55, SURF_ID='INFLOW', 
+      MESH_ID='FlowTmp', EVACUATION=.TRUE. /
+&OBST XB= 0.0, 2.0, 6.0,6.2, 1.45,1.55, SURF_ID='INERT',
+      MESH_ID='FlowTmp', EVACUATION=.TRUE. /
+
+&PERS ID='Adult',
+      FYI='Male+Female diameter and velocity',
+      DEFAULT_PROPERTIES='Adult',
+      PRE_EVAC_DIST=0,PRE_MEAN=0.1,
+      DET_EVAC_DIST=0,DET_MEAN=0.0,
+      DENS_INIT=4.0,
+      HUMAN_SMOKE_HEIGHT=1.60,
+      OUTPUT_SPEED=.TRUE.,
+      OUTPUT_CONTACT_FORCE=.TRUE.,
+      OUTPUT_TOTAL_FORCE=.TRUE.,
+      COLOR_METHOD = 0 /
+
+&EXIT ID='Count_bottom',
+      XB= 6.0, 6.0, 0.0, 2.0, 1.5,1.5,
+      COUNT_ONLY= .TRUE. ,
+      IOR=-1 /
+
+&EXIT ID='Count_right',
+      XB=12.0,14.0, 6.0, 6.0, 1.5,1.5,
+      COUNT_ONLY= .TRUE. ,
+      IOR=-2 /
+
+&EXIT ID='Count_top',
+      XB= 6.0, 6.0,12.0,14.0, 1.5,1.5,
+      COUNT_ONLY= .TRUE. ,
+      IOR=+1 /
+
+&EXIT ID='Count_left',
+      XB= 0.0, 2.0, 6.0, 6.0, 1.5,1.5,
+      COUNT_ONLY= .TRUE. ,
+      IOR=+2 /
+
+&EVAC ID= 'EvacAdultD',
+      NUMBER_INITIAL_PERSONS= 56,
+      XB= 0.0,14.0, 0.0, 2.0, 1.5,1.5,
+      AVATAR_COLOR= 'BLUE',
+      ANGLE= 180,
+      FLOW_FIELD_ID= 'FlowTmp',
+      PERS_ID=  'Adult' / 28m2
+
+&EVAC ID= 'EvacAdultU',
+      NUMBER_INITIAL_PERSONS= 56,
+      XB= 0.0,14.0, 12.0,14.0, 1.5,1.5,
+      AVATAR_COLOR= 'RED',
+      ANGLE= 0,
+      FLOW_FIELD_ID= 'FlowTmp',
+      PERS_ID=  'Adult' / 28m2
+
+&EVAC ID= 'EvacAdultL',
+      NUMBER_INITIAL_PERSONS= 40,
+      XB= 0.0, 2.0, 2.0,12.0, 1.5,1.5,
+      AVATAR_COLOR= 'GREEN',
+      ANGLE= 90,
+      FLOW_FIELD_ID= 'FlowTmp',
+      PERS_ID=  'Adult' / 20m2
+
+&EVAC ID= 'EvacAdultR',
+      NUMBER_INITIAL_PERSONS= 40,
+      XB= 12.0,14.0, 2.0,12.0, 1.5,1.5,
+      AVATAR_COLOR= 'MAGENTA',
+      ANGLE= -90,
+      FLOW_FIELD_ID= 'FlowTmp',
+      PERS_ID=  'Adult' / 20m2
+
+ Next line could be used to plot the evacuation flow fields:
+&SLCF PBZ = 1.500, QUANTITY = 'VELOCITY', VECTOR = .TRUE., EVACUATION=.TRUE. / 
+
+&TAIL /
