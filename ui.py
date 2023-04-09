@@ -24,6 +24,7 @@ class GUI(object):
         self.FN[1]=FN_EVAC
         self.fname_FDS=FN_FDS
         self.fname_EVAC=FN_EVAC
+        self.FNTemp=os.getcwd()+'\\log.txt'
 
         self.window = Tk()
         self.window.title('evac prt5 tool')
@@ -111,6 +112,23 @@ class GUI(object):
         self.showHelp(self.buttonStart, "Visualize all data files selected!")
         #buttonStart.place(x=5,y=220)
         print(self.FN[0], self.FN[1])
+        
+        if os.path.exists(self.FNTemp) and self.fname_FDS is None and self.fname_EVAC is None:
+        #if self.FNTemp is not None:
+            for line in open(self.FNTemp, "r"):
+                if re.match('FN_FDS', line):
+                    temp =  line.split('=')
+                    self.fname_FDS = temp[1].strip()
+                    self.lb0.config(text = "The FDS data file selected in the last run.\n")
+
+                if re.match('FN_EVAC', line):
+                    temp =  line.split('=')
+                    self.fname_EVAC = temp[1].strip()
+                    self.lb1.config(text = "The input prt5 data file selected in the last run\n")
+
+            self.textInformation.insert(END, '\n'+'FDS Input File Selected in the last run:   '+self.fname_FDS+'\n')
+            self.textInformation.insert(END, '\n'+'EVAC prt5 Data Selected in the last run:   '+self.fname_EVAC+'\n')
+
 
     def start(self):
         self.window.mainloop()
@@ -154,6 +172,13 @@ class GUI(object):
         self.textInformation.insert(END, '\n'+'FDS Input File Selected:   '+self.fname_FDS+'\n')
         print('fname_FDS:', self.fname_FDS)
         self.setStatusStr("Select FDS Input File.")
+        if os.path.exists(self.FNTemp) and self.fname_FDS is not None:
+            f = open(self.FNTemp, "a+")
+            f.write('FN_FDS='+str(self.fname_FDS)+'\n')
+            f.write('Working path='+os.getcwd()+'\n')
+            #f.write('TimeDate='+os.gettime()+'\n')
+            f.close()
+            print("write FDS filename in log")
 
     def selectEvacFile(self):
         self.fname_EVAC = tkf.askopenfilename(filetypes=(("All files", "*.*"), ("prt5 files", "*.prt5") ))
@@ -163,6 +188,12 @@ class GUI(object):
         self.textInformation.insert(END, '\n'+'EVAC prt5 Data Selected:   '+self.fname_EVAC+'\n')
         print('fname_EVAC', self.fname_EVAC)
         self.setStatusStr("Select Evac prt5 Data File.")
+        if os.path.exists(self.FNTemp) and self.fname_EVAC is not None:
+            f = open(self.FNTemp, "a+")
+            f.write('FN_EVAC='+str(self.fname_EVAC)+'\n')
+            f.write('Working path='+os.getcwd()+'\n')
+            f.close()
+            print("Write EVAC filename in log")
 
     def readData(self):
         #self.setStatusStr("Read Prt5 Data! This action may take a few seconds or minutes, depending on the size of data file!")
@@ -181,7 +212,9 @@ class GUI(object):
             # The following lines are effective only for the latest version of fds as well as fds6_dump205.exe
             # If you are using the old version of fds, please modify the code to read evac prt5 file.
             #self.textInformation.insert(END, "\nRead Prt5 Data! This action may take a few seconds or minutes, depending on the size of data file!")
-            readPRTfile(CHID+'_evac_0001.prt5')
+            temp=os.path.split(self.fname_FDS)
+            self.fname_EVAC=os.path.join(temp[0],CHID+'_evac_0001.prt5')
+            readPRTfile(self.fname_EVAC)
             self.textInformation.insert(END, "\nRead Prt5 Data Successfully!\n")
             return
         
@@ -213,7 +246,9 @@ class GUI(object):
                 sunpro1.start()
                 sunpro1.join()
             else:
-                sunpro1 = mp.Process(target=visualizeEvac(CHID+'_evac_0001.prt5', self.fname_FDS))
+                temp=os.path.split(self.fname_FDS)
+                self.fname_EVAC=os.path.join(temp[0],CHID+'_evac_0001.prt5')
+                sunpro1 = mp.Process(target=visualizeEvac(self.fname_EVAC, self.fname_FDS))
                 sunpro1.start()
                 sunpro1.join()
             #visualizeEvac(CHID+'_evac_0001.npz', self.FN[0])

@@ -488,7 +488,7 @@ def readFRec(infile,fmt):
         result = struct.unpack(fmt2,infile.read(len1))[0]  #?? why no list here??
     len2   = struct.unpack('@I', infile.read(4))[0]
     if fmt == 's':
-        result=result[0].rstrip()
+        result=result[0] #.decode().rstrip()
     return result
 
 
@@ -505,6 +505,7 @@ def readPRTfile(fname, wrtxt = True, max_time=np.Inf, mode='evac'):
     one_integer=readFRec(fin,'I')  #! Integer 1 to check Endian-ness
     version=readFRec(fin,'I')       # FDS version number
     n_part=readFRec(fin,'I')        # Number of PARTicle classes
+    #print(n_part)
     q_labels = []
     q_units  = []
     for npc in range(0,n_part):
