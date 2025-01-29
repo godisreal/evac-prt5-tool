@@ -404,40 +404,6 @@ def readWalls(FileName, debug=True, marginTitle=1, ini=0):
     return walls
 
 
-#This function addWall() is created for users to add wall in testGeom()
-def addWall(walls, startPt, endPt, mode='line'):
-    num = len(walls)
-    wall = obst()
-    
-    if mode == 'line':
-        wall.params[0]= float(startPt[0])
-        wall.params[1]= float(startPt[1])
-        wall.params[2]= float(endPt[0])
-        wall.params[3]= float(endPt[1])
-    if mode == 'rect':
-        #wall.params[0]= float(startPt[0])
-        #wall.params[1]= float(startPt[1])
-        #wall.params[2]= float(endPt[0])
-        #wall.params[3]= float(endPt[1])
-
-        wall.params[0]= min(float(startPt[0]),float(endPt[0]))
-        wall.params[1]= min(float(startPt[1]),float(endPt[1]))
-        wall.params[2]= max(float(startPt[0]),float(endPt[0]))
-        wall.params[3]= max(float(startPt[1]),float(endPt[1]))
-
-    wall.name = '-G-'
-    # The wall arrow is to be tested in simulation.  
-    # The default value is no direction assigned, i.e., zero.  
-    wall.arrow = 0 #normalize(endPt - startPt)
-    
-    wall.mode = mode
-    wall.oid = int(num)
-    wall.inComp = int(1)
-
-    # Add wall into the list of walls
-    walls.append(wall)
-
-
 def readDoors(FileName, debug=True, marginTitle=1, ini=0):
     #doorFeatures = readCSV(FileName, "string")
     #[Num_Doors, Num_Features] = np.shape(doorFeatures)
@@ -492,32 +458,6 @@ def readDoors(FileName, debug=True, marginTitle=1, ini=0):
         
     return doors
 
-
-#This function addDoor() is created for users to add door in testGeom()
-def addDoor(doors, startPt, endPt, mode='rect'):
-    num = len(doors)
-    door = passage()
-    
-    if mode == 'rect':
-        door.params[0]= min(float(startPt[0]),float(endPt[0]))
-        door.params[1]= min(float(startPt[1]),float(endPt[1]))
-        door.params[2]= max(float(startPt[0]),float(endPt[0]))
-        door.params[3]= max(float(startPt[1]),float(endPt[1]))
-
-    # The arrow is to be tested in simulation.  
-    # The default value is no direction assigned, i.e., zero.  
-    door.arrow = 0 #normalize(endPt - startPt)
-    door.mode = mode   # Currently door has no attribute of "mode"
-    door.name = '-G-'
-
-    door.oid = int(num)
-    door.inComp = int(1)
-    door.exitSign = int(0) # Default: there is no exit sign 
-    door.pos = (np.array([door.params[0], door.params[1]]) + np.array([door.params[2], door.params[3]]))*0.5
-    
-    # Add door into the list of doors
-    doors.append(door)
-    
 
 #[Num_Doors, Num_DoorFeatures] = np.shape(doorFeatures)
 #if np.shape(agent2doors)[0]!= Num_Agents or np.shape(agent2doors)[1]!= Num_Doors:
@@ -796,98 +736,6 @@ def readEXIT(FileName, Zmin=0.0, Zmax=3.0, outputFile=None, ShowData=False):
         exits.append(exit)
         index = index+1
     return exits
-
-
-#######################
-# Drawing the obstructions
-#######################
-def drawOBST(screen, walls, color, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace=0.0):
-
-    xyShift = np.array([xSpace, ySpace])
-    for wall in walls:
-        
-        if wall.inComp == 0:
-            continue
-        
-        if wall.mode=='line':
-            startPos = np.array([wall.params[0],wall.params[1]]) #+xyShift
-            endPos = np.array([wall.params[2],wall.params[3]]) #+xyShift
-            startPx = startPos*ZOOMFACTOR #+np.array([xSpace, ySpace])
-            endPx = endPos*ZOOMFACTOR #+np.array([xSpace, ySpace])
-            pygame.draw.line(screen, red, startPx+xyShift, endPx+xyShift, 2)
-            
-
-            if SHOWDATA:
-                myfont=pygame.font.SysFont("arial",14)
-                text_surface=myfont.render(str(startPos), True, (255,0,0), (255,255,255))
-                screen.blit(text_surface, startPos*ZOOMFACTOR +xyShift)
-                text_surface=myfont.render(str(endPos), True, (255,0,0), (255,255,255))
-                screen.blit(text_surface, endPos*ZOOMFACTOR +xyShift)
-
-        elif wall.mode=='rect':
-            x= ZOOMFACTOR*wall.params[0]
-            y= ZOOMFACTOR*wall.params[1]
-            w= ZOOMFACTOR*(wall.params[2] - wall.params[0])
-            h= ZOOMFACTOR*(wall.params[3] - wall.params[1])
-            
-            pygame.draw.rect(screen, color, [x+xSpace, y+ySpace, w, h], 2)
-
-            if SHOWDATA:
-                pass
-                startPos = np.array([wall.params[0],wall.params[1]])
-                endPos = np.array([wall.params[2],wall.params[3]])
-
-                myfont=pygame.font.SysFont("arial",10)
-
-                #text_surface=myfont.render(str(startPos), True, red, (255,255,255))
-                #screen.blit(text_surface, startPos*ZOOMFACTOR+xyShift)
-
-                #text_surface=myfont.render(str(endPos), True, red, (255,255,255))
-                #screen.blit(text_surface, endPos*ZOOMFACTOR+xyShift)
-
-   
-
-#############################
-# Drawing the path like holes,  doors, etc.  
-#############################
-def drawPATH(screen, doors, color, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace=0.0):
-
-    xyShift = np.array([xSpace, ySpace])
-    for door in doors:
-
-        if door.inComp == 0:
-            continue
-        
-        #startPos = np.array([door[0], door[1]])
-        #endPos = np.array([door[2], door[3]])
-
-        startPos = np.array([door.params[0],door.params[1]]) #+xyShift
-        endPos = np.array([door.params[2],door.params[3]]) #+xyShift
-
-        #Px = [0, 0]
-        #Px[0] = int(Pos[0]*ZOOMFACTOR)
-        #Px[1] = int(Pos[1]*ZOOMFACTOR)
-        #pygame.draw.circle(screen, red, Px, LINESICKNESS)
-
-        x= ZOOMFACTOR*door.params[0] 
-        y= ZOOMFACTOR*door.params[1] 
-        w= ZOOMFACTOR*(door.params[2] - door.params[0])
-        h= ZOOMFACTOR*(door.params[3] - door.params[1])
-            
-        pygame.draw.rect(screen, color, [x+ xSpace, y+ ySpace, w, h], 2)
-
-        if SHOWDATA:
-            
-            myfont=pygame.font.SysFont("arial",10)
-            text_surface=myfont.render(str(startPos), True, blue, (255,255,255))
-            screen.blit(text_surface, startPos*ZOOMFACTOR+xyShift)
-
-            #text_surface=myfont.render(str(endPos), True, blue, (255,255,255))
-            #screen.blit(text_surface, endPos*ZOOMFACTOR+xyShift)
-
-            myfont=pygame.font.SysFont("arial",13)
-            text_surface=myfont.render('ID'+str(door.id)+'/'+str(door.arrow), True, blue, (255,255,255))
-            screen.blit(text_surface, door.pos*ZOOMFACTOR+xyShift)
 
 
 ##############################

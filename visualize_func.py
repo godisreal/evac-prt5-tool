@@ -315,6 +315,100 @@ def drawDirection(screen, door, arrow, ZOOMFACTOR=10.0, xSpace=0.0, ySpace=0.0):
     #pygame.draw.line(screen, green, endPx*ZOOMFACTOR+xyShift, arrowPx2*ZOOMFACTOR+xyShift, 2)
 
 
+
+##############################################
+# Drawing the obstructions in FDS input data
+##############################################
+def drawOBST(screen, walls, color, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace=0.0):
+
+    xyShift = np.array([xSpace, ySpace])
+    for wall in walls:
+        
+        if wall.inComp == 0:
+            continue
+        
+        if wall.mode=='line':
+            startPos = np.array([wall.params[0],wall.params[1]]) #+xyShift
+            endPos = np.array([wall.params[2],wall.params[3]]) #+xyShift
+            startPx = startPos*ZOOMFACTOR #+np.array([xSpace, ySpace])
+            endPx = endPos*ZOOMFACTOR #+np.array([xSpace, ySpace])
+            pygame.draw.line(screen, red, startPx+xyShift, endPx+xyShift, 2)
+            
+
+            if SHOWDATA:
+                myfont=pygame.font.SysFont("arial",14)
+                text_surface=myfont.render(str(startPos), True, (255,0,0), (255,255,255))
+                screen.blit(text_surface, startPos*ZOOMFACTOR +xyShift)
+                text_surface=myfont.render(str(endPos), True, (255,0,0), (255,255,255))
+                screen.blit(text_surface, endPos*ZOOMFACTOR +xyShift)
+
+        elif wall.mode=='rect':
+            x= ZOOMFACTOR*wall.params[0]
+            y= ZOOMFACTOR*wall.params[1]
+            w= ZOOMFACTOR*(wall.params[2] - wall.params[0])
+            h= ZOOMFACTOR*(wall.params[3] - wall.params[1])
+            
+            pygame.draw.rect(screen, color, [x+xSpace, y+ySpace, w, h], 2)
+
+            if SHOWDATA:
+                pass
+                startPos = np.array([wall.params[0],wall.params[1]])
+                endPos = np.array([wall.params[2],wall.params[3]])
+
+                myfont=pygame.font.SysFont("arial",10)
+
+                #text_surface=myfont.render(str(startPos), True, red, (255,255,255))
+                #screen.blit(text_surface, startPos*ZOOMFACTOR+xyShift)
+
+                #text_surface=myfont.render(str(endPos), True, red, (255,255,255))
+                #screen.blit(text_surface, endPos*ZOOMFACTOR+xyShift)
+
+   
+
+#####################################################################
+# Drawing the path like holes,  doors, etc. from FDS input data
+#####################################################################
+def drawPATH(screen, doors, color, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace=0.0):
+
+    xyShift = np.array([xSpace, ySpace])
+    for door in doors:
+
+        if door.inComp == 0:
+            continue
+        
+        #startPos = np.array([door[0], door[1]])
+        #endPos = np.array([door[2], door[3]])
+
+        startPos = np.array([door.params[0],door.params[1]]) #+xyShift
+        endPos = np.array([door.params[2],door.params[3]]) #+xyShift
+
+        #Px = [0, 0]
+        #Px[0] = int(Pos[0]*ZOOMFACTOR)
+        #Px[1] = int(Pos[1]*ZOOMFACTOR)
+        #pygame.draw.circle(screen, red, Px, LINESICKNESS)
+
+        x= ZOOMFACTOR*door.params[0] 
+        y= ZOOMFACTOR*door.params[1] 
+        w= ZOOMFACTOR*(door.params[2] - door.params[0])
+        h= ZOOMFACTOR*(door.params[3] - door.params[1])
+            
+        pygame.draw.rect(screen, color, [x+ xSpace, y+ ySpace, w, h], 2)
+
+        if SHOWDATA:
+            
+            myfont=pygame.font.SysFont("arial",10)
+            text_surface=myfont.render(str(startPos), True, blue, (255,255,255))
+            screen.blit(text_surface, startPos*ZOOMFACTOR+xyShift)
+
+            #text_surface=myfont.render(str(endPos), True, blue, (255,255,255))
+            #screen.blit(text_surface, endPos*ZOOMFACTOR+xyShift)
+
+            myfont=pygame.font.SysFont("arial",13)
+            text_surface=myfont.render('ID'+str(door.id)+'/'+str(door.arrow), True, blue, (255,255,255))
+            screen.blit(text_surface, door.pos*ZOOMFACTOR+xyShift)
+
+
+
 def visualizeTpre(fname, evacfile=None, fdsfile=None, Zmin=0.0, Zmax=3.0, showdata=True):
     
     # Plot pre-movement time by using matplotlib
@@ -363,6 +457,7 @@ def visualizeTpre(fname, evacfile=None, fdsfile=None, Zmin=0.0, Zmax=3.0, showda
             plt.plot(Time, arrayTpre[i,:], linewidth=2.0, label=str(i))
             #plt.plot(arrayTpre[i,:], linewidth=3.0, label=str(i))
             plt.text(0, arrayTpre[i,0], str(i), fontsize=18)
+        plt.plot(Time, Time, linestyle='-.', linewidth=3.0)
         #plt.plot(arrayTpre)
         plt.title("Pre-movement Time")
         plt.grid()
