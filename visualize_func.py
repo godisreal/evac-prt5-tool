@@ -425,7 +425,7 @@ def visualizeTpre(fname, evacfile=None, fdsfile=None, Zmin=0.0, Zmax=3.0, showda
     #print("TAG:", TAG)
      
     # Extract data from binary data file
-    Time, XYZ, TAG, INFO, n_part, n_agents, n_quant = readPRTfile(fname)
+    Time, XYZ, TAG, INFO, n_part, n_agents, n_quant = readPRTfile(fname, wrtxt=False)
     T_END = len(Time)
     print('T_END:', T_END)
 
@@ -524,6 +524,7 @@ def plotDoorProb(FileName, doorIndex=0):
     return matrix
 
 
+
 def readDoorProb(FileName, doorIndex, showdata=True):
     findMESH=False
     doorProb=[]
@@ -587,7 +588,9 @@ def readDoorProb(FileName, doorIndex, showdata=True):
         fnamePNG = temp[0]+'_exitprob.png'
         plt.savefig(fnamePNG)
         plt.show()
+
     return matrix
+
 
 # This function is used for visualization of FDS+Evac prt5 data file
 # Because FDS+Evac is not officially maintained by NIST and VTT, this function is not very useful now.  
@@ -620,7 +623,7 @@ def visualizeFdsEvac(fname, fdsfile=None, Zmin=0.0, Zmax=3.0):
         wrtxt=True
      
     # Extract data from .prt5 data file
-    Time, XYZ, TAG, INFO, n_part, version, n_quant = readPRTfile(fname, wrtxt)
+    Time, XYZ, TAG, INFO, n_part, version, n_quant = readPRTfile(fname, wrtxt=False)
         
     T_END = len(Time)
     if debugPygame:
@@ -825,7 +828,7 @@ def visualizeAgent(fname, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=2
     #print("TAG:", TAG)
      
     # Extract data from binary data file
-    Time, XYZ, TAG, INFO, n_part, n_agents, n_quant = readPRTfile(fname)
+    Time, XYZ, TAG, INFO, n_part, n_agents, n_quant = readPRTfile(fname, wrtxt=False)
     agentsPos = np.zeros((n_agents, 2))
 
     temp=fname.split('.')

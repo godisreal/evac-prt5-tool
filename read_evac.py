@@ -766,12 +766,13 @@ def readFRec(infile,fmt):
 #################################
 # The function readPRTfile is mainly written by Topi
 #Assumes single precision
-def readPRTfile(fname, wrtxt = True, max_time=np.Inf, mode='evac'):
+def readPRTfile(fname, wrtxt = False, max_time=np.Inf, mode='evac'):
 
     fin = open(fname,'rb')
     temp = fname.split('.prt5')
     outfn = temp[0]
-    outfile = open(outfn + ".txt", "w")
+    if wrtxt:
+        outfile = open(outfn + ".txt", "w")
     
     one_integer=readFRec(fin,'I')  #! Integer 1 to check Endian-ness
     version=readFRec(fin,'I')       # FDS version number
@@ -831,7 +832,8 @@ def readPRTfile(fname, wrtxt = True, max_time=np.Inf, mode='evac'):
             tmp = fin.read(24)
     
     fin.close()
-    outfile.close()
+    if wrtxt:
+        outfile.close()
     #np.savez( outfn + ".npz", T, XYZ, TAG, Q)
     #return (np.array(T),np.hstack(Q),q_labels,q_units)
     return T, XYZ, TAG, Q, n_part, version, n_quant

@@ -271,7 +271,7 @@ class GUI(object):
         if os.path.exists(self.fname_EVAC) and self.fname_EVAC is not None and self.fname_EVAC is not '':
             print('load binary data file and extract evac-related information', self.fname_EVAC)
             #self.textInformation.insert(END, "\nRead Prt5 Data! This action may take a few seconds or minutes, depending on the size of data file!")
-            readPRTfile(self.fname_EVAC)
+            readPRTfile(self.fname_EVAC, wrtxt=True)
             self.textInformation.insert(END, "\nRead Binary Data Successfully!\n")
             msg.showinfo("Write Binary Data File into Text File",  "Read Binary Data Successfully!")
             return
@@ -286,7 +286,7 @@ class GUI(object):
             #self.textInformation.insert(END, "\nRead Prt5 Data! This action may take a few seconds or minutes, depending on the size of data file!")
             temp=os.path.split(self.fname_FDS)
             self.fname_EVAC=os.path.join(temp[0],CHID+'_evac_0001.prt5')
-            readPRTfile(self.fname_EVAC)
+            readPRTfile(self.fname_EVAC,  wrtxt=True)
             self.textInformation.insert(END, "\nRead Prt5 Data Successfully!\n")
             msg.showinfo("Write Prt5 Data File into Text File",  "Read Prt5 Data Successfully!")
             return
