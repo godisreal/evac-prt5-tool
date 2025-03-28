@@ -766,7 +766,7 @@ def readFRec(infile,fmt):
 #################################
 # The function readPRTfile is mainly written by Topi
 #Assumes single precision
-def readPRTfile(fname, wrtxt = False, max_time=np.Inf, mode='evac'):
+def readPRTfile(fname, wrtxt = False, max_time=float('inf'), mode='evac'):
 
     fin = open(fname,'rb')
     temp = fname.split('.prt5')
@@ -805,17 +805,19 @@ def readPRTfile(fname, wrtxt = False, max_time=np.Inf, mode='evac'):
             break
         nplim = readFRec(fin,'I')  # Number of particles in the PART class
         if nplim>0:
-            xyz  = np.array(readFRec(fin,'f'))
+            xyz = np.array(readFRec(fin,'f'))
             tag  = np.array(readFRec(fin,'I'))
-            q    = np.array(readFRec(fin,'f'))
+            q = np.array(readFRec(fin,'f'))
+
 
             #print >> outfile, "g", q, "\n"
             if mode=='evac':
                 xyz.shape = (7,nplim) # evac data: please check dump_evac() in evac.f90
             else: 
                 xyz.shape = (3,nplim) # particle data: please check dump_part() in dump.f90
-            
-            q.shape   = (n_quant, nplim)
+
+            q.shape = (n_quant, nplim)
+
             
             if wrtxt:
                 outfile.write("Time:" + str(Time) + "\n")
@@ -828,6 +830,7 @@ def readPRTfile(fname, wrtxt = False, max_time=np.Inf, mode='evac'):
             XYZ.append(xyz)
             TAG.append(tag)
             Q.append(q)
+            
         else:
             tmp = fin.read(24)
     
@@ -837,6 +840,78 @@ def readPRTfile(fname, wrtxt = False, max_time=np.Inf, mode='evac'):
     #np.savez( outfn + ".npz", T, XYZ, TAG, Q)
     #return (np.array(T),np.hstack(Q),q_labels,q_units)
     return T, XYZ, TAG, Q, n_part, version, n_quant
+
+
+
+#################################
+# The function readPRTfile is mainly written by Topi
+#Assumes single precision
+def readPRTfileNoQ(fname, wrtxt = False, max_time=float('inf'), mode='evac'):
+
+    fin = open(fname,'rb')
+    temp = fname.split('.prt5')
+    outfn = temp[0]
+    if wrtxt:
+        outfile = open(outfn + ".txt", "w")
+    
+    one_integer=readFRec(fin,'I')  #! Integer 1 to check Endian-ness
+    version=readFRec(fin,'I')       # FDS version number
+    n_part=readFRec(fin,'I')        # Number of PARTicle classes
+    #print(n_part)
+    q_labels = []
+    q_units  = []
+    for npc in range(0,n_part):
+        n_quant,zero_int=readFRec(fin,'I')  # EVAC_N_QUANTITIES, ZERO_INTEGER
+        for nq in range(0,n_quant):
+            smv_label=readFRec(fin,'s')
+            #print(smv_label)
+            units    =readFRec(fin,'s')
+            q_units.append(units)  
+            q_labels.append(smv_label)
+    if wrtxt:
+        outfile.write("one_integer:" + str(one_integer) + "\n")    
+        outfile.write("n_part:" + str(n_part) + "\n") 
+        outfile.write("n_quant:" + str(n_quant) + "\n")
+        
+    T  = []
+    #diam =[] ??? Not used in this program
+    XYZ = []
+    TAG = []
+    while True:
+
+        Time  = readFRec(fin,'f')  # Time index
+        if Time == None or Time>max_time:
+            break
+        nplim = readFRec(fin,'I')  # Number of particles in the PART class
+        if nplim>0:
+            xyz = np.array(readFRec(fin,'f'))
+            tag  = np.array(readFRec(fin,'I'))
+
+            #print >> outfile, "g", q, "\n"
+            if mode=='evac':
+                xyz.shape = (7,nplim) # evac data: please check dump_evac() in evac.f90
+            else: 
+                xyz.shape = (3,nplim) # particle data: please check dump_part() in dump.f90
+            
+            if wrtxt:
+                outfile.write("Time:" + str(Time) + "\n")
+                outfile.write("xyz:" + str(xyz) + "\n") 
+                outfile.write("tag:" + str(tag) + "\n")           
+
+            # process timestep data
+            T.append(Time)
+            XYZ.append(xyz)
+            TAG.append(tag)
+            
+        else:
+            tmp = fin.read(24)
+    
+    fin.close()
+    if wrtxt:
+        outfile.close()
+    #np.savez( outfn + ".npz", T, XYZ, TAG, Q)
+    #return (np.array(T),np.hstack(Q),q_labels,q_units)
+    return T, XYZ, TAG, n_part, version, n_quant
 
 '''
 def visualizeAgents(fname, fdsfile=None, Zmin=0.0, Zmax=3.0, agents = None):

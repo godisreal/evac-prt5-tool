@@ -616,15 +616,22 @@ def visualizeFdsEvac(fname, fdsfile=None, Zmin=0.0, Zmax=3.0):
     
     # If there are already .txt data extracted from .prt5 file, the visualizer will not repeat to write .txt file because it may be time-consuming.  
     temp = fname.split('.prt5')
+    fnameNPZ = temp[0]+'.npz'
+    fnameCSV = temp[0]+'.csv'
+    fnameTXT = temp[0]+'.txt' 
     outtxt = temp[0]+".txt"
+    
     if os.path.exists(outtxt):
         wrtxt=False
     else:
         wrtxt=True
      
     # Extract data from .prt5 data file
-    Time, XYZ, TAG, INFO, n_part, version, n_quant = readPRTfile(fname, wrtxt=False)
-        
+    try:
+        Time, XYZ, TAG, INFO, n_part, version, n_quant = readPRTfile(fname, wrtxt=False)
+    except:
+        Time, XYZ, TAG, n_part, version, n_quant = readPRTfileNoQ(fname, wrtxt=False)
+
     T_END = len(Time)
     if debugPygame:
         print ("Length of time axis in prt5 data file", T_END)
@@ -632,7 +639,11 @@ def visualizeFdsEvac(fname, fdsfile=None, Zmin=0.0, Zmax=3.0):
         print ("T_Final=", Time[T_END-1])
     T_INDEX=0
 
-    if fdsfile!=None:
+    walls=[]
+    doors=[]
+    exits=[]
+
+    if fdsfile is not None and len(walls)+len(doors)+len(exits)==0:
         #meshes, evacZmin, evacZmax = readMESH(fdsfile, 'evac')
         #N_meshes = len(meshes)
         #evacZoffset=0.5*(evacZmin+evacZmax)
@@ -642,6 +653,16 @@ def visualizeFdsEvac(fname, fdsfile=None, Zmin=0.0, Zmax=3.0):
         exits=readPATH(fdsfile, '&EXIT', Zmin, Zmax)
         doors=readPATH(fdsfile, '&DOOR', Zmin, Zmax)
         entries=readPATH(fdsfile, '&ENTRY', Zmin, Zmax)
+
+    elif os.path.exists(fnameCSV) and len(walls)+len(doors)+len(exits)==0:
+        walls = readWalls(fnameCSV)
+        doors = readDoors(fnameCSV)
+        exits = readExits(fnameCSV)
+        
+    elif os.path.exists(fnameTXT) and len(walls)+len(doors)+len(exits)==0:
+        walls = readWalls(fnameTXT)
+        doors = readDoors(fnameTXT)
+        exits = readExits(fnameTXT)
         
     
     ZOOMFACTOR=10.0
@@ -726,7 +747,8 @@ def visualizeFdsEvac(fname, fdsfile=None, Zmin=0.0, Zmax=3.0):
             print("Simulation End!")
             #running=False
             #pygame.display.quit()
-            PAUSE=True
+            #PAUSE=True
+            T_INDEX = 0
         else:
             if PAUSE==False:
                 T_INDEX = T_INDEX+1
@@ -740,7 +762,10 @@ def visualizeFdsEvac(fname, fdsfile=None, Zmin=0.0, Zmax=3.0):
         Time_t = Time[T_INDEX]
         XYZ_t = XYZ[T_INDEX]
         TAG_t = TAG[T_INDEX]
-        INFO_t = INFO[T_INDEX]
+        try:
+            INFO_t = INFO[T_INDEX]
+        except:
+            print("No info for agent characteristics!")
 
         # This is due to readFRec:.  Let x become [x] when x is a scalar 
         if np.size(TAG_t)==1:
@@ -758,13 +783,15 @@ def visualizeFdsEvac(fname, fdsfile=None, Zmin=0.0, Zmax=3.0):
             time_surface=myfont.render("Simulation Time:" + str(Time_t), True, (0,0,0), (255,255,255))
             screen.blit(time_surface, [620,300]) #[750,350]*ZOOMFACTOR)
 
-        if fdsfile!=None:
+        try:
             drawOBST(screen, walls, red, ZOOMFACTOR, SHOWWALLDATA, xSpace, ySpace)
             drawPATH(screen, holes, green, ZOOMFACTOR, SHOWDOORDATA, xSpace, ySpace)
             drawPATH(screen, exits, lightpink, ZOOMFACTOR, SHOWEXITDATA, xSpace, ySpace)
             drawPATH(screen, doors, green, ZOOMFACTOR, SHOWEXITDATA, xSpace, ySpace)
             drawPATH(screen, entries, purple, ZOOMFACTOR, SHOWEXITDATA, xSpace, ySpace)
-
+        except:
+            print("No compartment layout visualized in pygame!")
+        
         if debugPygame:
             print ("Show TAG_t: ", TAG_t)
         
