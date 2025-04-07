@@ -163,7 +163,7 @@ class GUI(object):
         #buttonStart.place(x=5,y=220)
         #print(self.fname_FDS, self.fname_EVAC)
 
-        self.lb_exit = Label(self.window,text =  "Exit index number for plot:")
+        self.lb_exit = Label(self.window,text =  "Select the exit index number for probability plot as below:")
         self.lb_exit.pack()
 
         self.spin_exitnumber = Spinbox(self.window, from_=0, to=100, width=5, bd=8) 
@@ -181,7 +181,9 @@ class GUI(object):
                 if re.match('FN_EVAC', line):
                     temp =  line.split('=')
                     self.fname_EVAC = temp[1].strip()
-                    #self.lb1.config(text = "The input prt5 data file selected in the last run\n")
+                    self.lb1.config(text = "The input prt5 data file selected in the last run:\n"+str(self.fname_EVAC))
+                    self.openfn  = os.path.basename(self.fname_EVAC)
+                    self.opendir = os.path.dirname(self.fname_EVAC)
                     
                 if re.match('FN_EVACtxt', line):
                     temp =  line.split('=')
@@ -405,7 +407,10 @@ class GUI(object):
             print("Write EVACtxt filename in log")
 
         if os.path.exists(self.fname_EVACtxt):
-            plotDoorProb(self.fname_EVACtxt, doorIndex=2)
+            exitNum = self.spin_exitnumber.get()
+            print('Exit index in plot:', int(exitNum))
+            self.textInformation.insert(END, 'Exit index in plot:'+str(exitNum))
+            readDoorProb(self.fname_EVACtxt, doorIndex= int(exitNum))
             #sunpro1 = mp.Process(target=plt.plot(doorProb))
             #sunpro1.start()
             #sunpro1.join()

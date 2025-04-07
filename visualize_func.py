@@ -520,64 +520,6 @@ def visualizeTpre(fname, evacfile=None, fdsfile=None, Zmin=0.0, Zmax=3.0, showda
     return arrayTpre
 
 
-# Find the first &MESH line in FDS input file and return the value
-def plotDoorProb(FileName, doorIndex=0):
-    findMESH=False
-    doorProb=[]
-    for line in open(FileName):
-        if re.match('&DoorProb', line):
-            findMESH=True
-            row=[]
-        if  findMESH:
-            if re.search('prob=', line):
-                dataTemp=line.split('prob=')
-                #print('dataTemp:', dataTemp[1:])
-
-                #for index in range(len(dataTemp[1:])):
-                #    probDist=dataTemp[index+1].lstrip('[').strip('=').rstrip(']')
-                probDist=dataTemp[1].lstrip('[').strip('=').rstrip(']')
-                temp2 =  re.split(r'[\s\,]+', probDist)
-                print(temp2)
-                prob = float(temp2[doorIndex].lstrip('[').strip('=').rstrip(']'))
-                row.append(prob)
-                #print(row)
-
-                    #xpoints = temp2[0]
-                    #ypoints = temp2[1]
-            '''
-            if re.search('XB', line):
-                temp1=line.split('XB')
-                line1=temp1[1].strip().strip('=').strip()
-                temp2 =  re.split(r'[\s\,]+', line1)
-                xmax = temp2[1]-temp2[0]
-                ymax = temp2[3]-temp2[2]
-            '''
-            if re.search('WellDone!', line):
-                findMESH = False
-                #doorProb.append(dataTemp[1:])
-                doorProb.append(row)
-                # return xpoints, ypoints, xmax, ymax
-                # Only find the first &MESH line
-                # The second or other MESH lines are ignored
-
-    print('doorProb', doorProb)
-    (NRow, NColomn) = np.shape(doorProb)  
-    matrix = np.zeros((NRow, NColomn))
-    for i in range(NRow):
-            for j in range(NColomn):
-                matrix[i,j] = float(doorProb[i][j])
-    print('matrix', matrix)
-    print(len(matrix))
-    plt.figure()
-    plt.plot(matrix)
-    temp=FileName.split('.')
-    fnamePNG = temp[0]+'_exitprob.png'
-    plt.savefig(fnamePNG)
-    plt.show()
-    return matrix
-
-
-
 def readDoorProb(FileName, doorIndex, showdata=True):
     findMESH=False
     doorProb=[]
