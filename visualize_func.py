@@ -408,6 +408,59 @@ def drawPATH(screen, doors, color, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, 
             screen.blit(text_surface, door.pos*ZOOMFACTOR+xyShift)
 
 
+def visualizeStress(fname, showdata=True):
+    
+    # Plot pre-movement time by using matplotlib
+ 
+    # np.load has some unexpected problem for latest version of numpy in python3.  Thus I will not use this stuff.  
+    # If anyone wants to help to debug the following lines, I will appreciate.  
+    
+    #prtdata = np.load(fname) #load .npz file
+    #Time = prtdata["arr_0"]
+    #XYZ = prtdata["arr_1"]
+    #TAG = prtdata["arr_2"]
+    #INFO = prtdata["arr_3"]
+    #print("TAG:", TAG)
+     
+    # Extract data from binary data file
+    Time, XYZ, TAG, INFO, n_part, n_agents, n_quant = readPRTfile(fname, wrtxt=False)
+    T_END = len(Time)
+    print('T_END:', T_END)
+
+    T_INDEX=0
+    arrayStress = np.zeros((n_agents, T_END))  
+             
+    for T_INDEX in range(T_END):
+        Time_t = Time[T_INDEX]
+        XYZ_t = XYZ[T_INDEX]
+        TAG_t = TAG[T_INDEX]
+        INFO_t = INFO[T_INDEX]
+        
+        # This is due to readFRec:.  Let x become [x] when x is a scalar 
+        if np.size(TAG_t)==1:
+            TAG_t = np.array([TAG_t])
+        print(TAG_t)
+        
+        for idai in range(np.size(TAG_t)):
+            #print(TAG_t[idai])
+            arrayStress[int(TAG_t[idai]), T_INDEX] = INFO_t[19][idai]
+    
+    print('Shape of arrayStress:', np.shape(arrayStress))
+    print('arrayStress:', arrayStress)
+    
+    (NRow, NColomn) = np.shape(arrayStress)  
+    if showdata:
+        for i in range(NRow):
+            plt.plot(Time, arrayStress[i,:], linewidth=2.0, label=str(i))
+            #plt.plot(arrayStress[i,:], linewidth=3.0, label=str(i))
+            plt.text(0, arrayStress[i,0], str(i), fontsize=18)
+        #plt.plot(arrayStress)
+        plt.title("Stress Level of Agents")
+        plt.grid()
+        plt.legend(loc='best')
+        plt.show()
+    return arrayStress
+
 
 def visualizeTpre(fname, evacfile=None, fdsfile=None, Zmin=0.0, Zmax=3.0, showdata=True):
     

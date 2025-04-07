@@ -62,7 +62,7 @@ class GUI(object):
 
         self.window = Tk()
         self.window.title('evac prt5 tool')
-        self.window.geometry('960x390')
+        self.window.geometry('970x430')
 
         self.notebook = Notebook(self.window)      
         self.notebook.pack(side=TOP, padx=2, pady=2)
@@ -80,7 +80,7 @@ class GUI(object):
         scrollInfo = Scrollbar(self.window)#frameInformation)
         self.textInformation = Text(self.window, width=45,height=6,fg='cyan', bg='black',wrap=WORD,font=("Courier",10))
         scrollInfo.pack(side=RIGHT, fill=Y)
-        self.textInformation.pack(side=LEFT,fill=BOTH,expand=YES)
+        self.textInformation.pack(side=RIGHT, fill=BOTH, expand=YES)
         scrollInfo.config(command=self.textInformation.yview)
         self.textInformation.config(yscrollcommand=scrollInfo.set)
         self.textInformation.insert(END, 'Please select .fds file or prt5 file to read in data or visualize the data!')
@@ -147,18 +147,29 @@ class GUI(object):
         #buttonStart.place(x=5,y=220)
         #print(self.fname_FDS, self.fname_EVAC)
 
+        self.buttonPlotTpre =Button(self.window, text='plot pre-movement time data',  width=38, command=self.plotTpre)
+        self.buttonPlotTpre.pack()
+        self.showHelp(self.buttonPlotTpre, "Select an output text file of CrowdEgress \n Plot pre-movement time from data selected!")
+        #Button(window, text='choose csv file for door data', command=lambda: selectFile(2)).pack()
+
+        self.buttonPlotStress =Button(self.window, text='plot agent stress level data',  width=38, command=self.plotStress)
+        self.buttonPlotStress.pack()
+        self.showHelp(self.buttonPlotStress, "Select an output text file of CrowdEgress \n Plot agent stress level from data selected!")
+        #Button(window, text='choose csv file for door data', command=lambda: selectFile(2)).pack()
+
         self.buttonPlotDoorProb = Button(self.window, text='plot exit selection probability data', width=38, command=self.plotExitProb)
         self.buttonPlotDoorProb.pack()
         self.showHelp(self.buttonPlotDoorProb, "Select an output text file of CrowdEgress \n Plot exit selection probability from data selected!")
         #buttonStart.place(x=5,y=220)
         #print(self.fname_FDS, self.fname_EVAC)
 
-        self.buttonPlotTpre =Button(self.window, text='plot pre-movement time data',  width=38, command=self.plotTpre)
-        self.buttonPlotTpre.pack()
-        self.showHelp(self.buttonPlotTpre, "Select an output text file of CrowdEgress \n Plot pre-movement time from data selected!")
-        #Button(window, text='choose csv file for door data', command=lambda: selectFile(2)).pack()
+        self.lb_exit = Label(self.window,text =  "Exit index number for plot:")
+        self.lb_exit.pack()
 
-        
+        self.spin_exitnumber = Spinbox(self.window, from_=0, to=100, width=5, bd=8) 
+        self.spin_exitnumber.pack() #place(x=689, y=360)
+        self.showHelp(self.spin_exitnumber, "Select the exit index to show the probability.  \n The exit index starts from 0 to the number_of_exit-1. \n To identify the exit index, please show exit data in TestGeom. ")
+
         if os.path.exists(self.FNTemp) and self.fname_FDS is None and self.fname_EVAC is None and self.fname_EVACtxt is None:
         #if self.FNTemp is not None:
             for line in open(self.FNTemp, "r"):
@@ -215,13 +226,14 @@ class GUI(object):
         self.textInformation.insert(END, '\n'+'FDS Input File Selected:  '+self.fname_FDS+'\n'+'Please note that if users plan to visualize prt5 data file, the compartment geometry is created by fds file as selected. \n However, the program will not check if the prt5 data is exactly generated from the fds file as selected. ')
         print('fname_FDS:', self.fname_FDS)
         self.setStatusStr("Select FDS Input File.")
-        if os.path.exists(self.FNTemp) and self.fname_FDS is not None and self.fname_FDS is not '':
-            f = open(self.FNTemp, "a+")
-            f.write('FN_FDS='+str(self.fname_FDS)+'\n')
-            f.write('Working path='+os.getcwd()+'\n')
-            #f.write('TimeDate='+os.gettime()+'\n')
-            f.close()
-            print("write FDS filename in log")
+        if self.fname_FDS is not None and self.fname_FDS is not '':
+            if os.path.exists(self.FNTemp):
+                f = open(self.FNTemp, "a+")
+                f.write('FN_FDS='+str(self.fname_FDS)+'\n')
+                f.write('Working path='+os.getcwd()+'\n')
+                #f.write('TimeDate='+os.gettime()+'\n')
+                f.close()
+                print("write FDS filename in log")
             msg.showinfo('Info', 'Please note that fds input file is only used in visualization of prt5 data. \n In other words, if users plan to visualize prt5 data file, the compartment geometry is created by fds file as selected. \n However, the program will not check if the prt5 data is exactly generated from the fds file as selected. \n Thus, please ensure the prt5 data file selected for visualization is produced from this fds input file. ')
 
 
@@ -237,13 +249,14 @@ class GUI(object):
         print(temp)
         suffix = str(temp[-1].strip())
         self.setStatusStr("Select Evac Binary Data File.")
-        if os.path.exists(self.FNTemp) and self.fname_EVAC is not None and self.fname_EVAC is not '':
-            #self.opendir = os.getcwd()
-            f = open(self.FNTemp, "a+")
-            f.write('FN_EVAC='+str(self.fname_EVAC)+'\n')
-            f.write('Working path='+ self.opendir + '\n') #os.getcwd()+'\n')
-            f.close()
-            print("Write EVAC filename in log")
+        if self.fname_EVAC is not None and self.fname_EVAC is not '':
+            if os.path.exists(self.FNTemp):
+                #self.opendir = os.getcwd()
+                f = open(self.FNTemp, "a+")
+                f.write('FN_EVAC='+str(self.fname_EVAC)+'\n')
+                f.write('Working path='+ self.opendir + '\n') #os.getcwd()+'\n')
+                f.close()
+                print("Write EVAC filename in log")
             if suffix == 'bin':
                 msg.showinfo("CrowdEgress data file selected",  "CrowdEgress binary data file selected. \n Users may write the binary data into a text file or directly visualize the data file \n" +self.opendir + '\n' + self.openfn)
             elif suffix == 'prt5':
@@ -294,6 +307,7 @@ class GUI(object):
         print('No input files found! Please select the data file or fds input file!')
         self.setStatusStr('No input files found! Please select the data file or fds input file!')
         return
+
 
     def startSim(self):
         #myTest = simulation()
@@ -428,7 +442,21 @@ class GUI(object):
         self.setStatusStr("Simulation not yet started!")
         self.textInformation.insert(END, '\n'+'Output Tpre Binary File Selected (Pre-Evacuation Time): '+self.fname_TpreBinFile+'\n')
         visualizeTpre(self.fname_TpreBinFile)
-        
+
+    def plotStress(self):
+        #tempdir=os.path.dirname(self.fname_EVAC)
+        #print(tempdir)
+        self.fname_StressBinFile = tkf.askopenfilename(filetypes=(("bin files", "*.bin"),("All files", "*.*")), initialdir=self.opendir)
+        self.opendir = os.path.dirname(self.fname_StressBinFile)
+        temp=re.split(r'/', self.fname_StressBinFile)
+        #temp=self.fname_OutTXT.split('/') 
+        #self.lb_outbin.config(text = "The output bin file selected: "+str(temp[-1])+"\n")
+        #self.textInformation.insert(END, 'fname_FDS:   '+self.fname_FDS)
+        print('fname_StressBinFile:', self.fname_StressBinFile)
+        self.setStatusStr("Simulation not yet started!")
+        self.textInformation.insert(END, '\n'+'Output Stress Binary File Selected (Agent Stress Level): '+self.fname_StressBinFile+'\n')
+        visualizeStress(self.fname_StressBinFile)
+
 
 if __name__ == '__main__':
     myGUI=GUI()
