@@ -47,7 +47,7 @@ else:
     
 class GUI(object):
 
-    def __init__(self, FN_FDS=None, FN_EVAC=None, FN_EVACtxt=None):
+    def __init__(self, FN_FDS=None, FN_EVAC=None):
 
         #self.FN_Info = ['FDS', 'EVAC'] #, 'Doors']
         #self.FN=[None, None] #, None]
@@ -55,14 +55,17 @@ class GUI(object):
         #self.FN[1]=FN_EVAC
         self.fname_FDS=FN_FDS
         self.fname_EVAC=FN_EVAC
-        self.fname_EVACtxt=FN_EVACtxt        
         self.FNTemp=os.getcwd() +'/log.txt'
-        self.openfn=None
-        self.opendir=None
+        
+        self.openfn  = None
+        self.opendir = None
+
+        self.fname_EVACtxt = None
+        self.fname_EVACnpz = None
 
         self.window = Tk()
         self.window.title('evac prt5 tool')
-        self.window.geometry('970x430')
+        self.window.geometry('970x470')
 
         self.notebook = Notebook(self.window)      
         self.notebook.pack(side=TOP, padx=2, pady=2)
@@ -119,11 +122,11 @@ class GUI(object):
         self.lb0 = Label(self.window,text =  "Optional: The FDS input file selected: "+str(self.fname_FDS)+"\n")
         self.lb0.pack()
 
-        self.lb1 = Label(self.window,text =  "The EVAC data file selected: "+str(self.fname_EVAC)+"\n")
+        self.lb1 = Label(self.window,text =  "The EVAC data file selected: "+str(self.openfn)+"\n")
         self.lb1.pack()
 
-        #self.lb2 = Label(self.window,,text =  "The exit data file selected: "+str(FN[2])+"\n")
-        #self.lb2.pack()
+        self.lb2 = Label(self.window, text =  "The working path: "+str(self.opendir)+"\n")
+        self.lb2.pack()
 
         self.buttonSelectFDS =Button(self.window, text='Optional: choose fds input file', width=38, command=self.selectFDSFile)
         self.buttonSelectFDS.pack()
@@ -131,7 +134,7 @@ class GUI(object):
 
         self.buttonBinParser =Button(self.window, text='Parser for binary data file', width=38, command=self.parseEvacFile)
         self.buttonBinParser.pack()
-        self.showHelp(self.buttonBinParser, "Indicate if the binary data file is \n for CrowdEgress or FDS+Evac!")
+        self.showHelp(self.buttonBinParser, "Select binary data file and show if the binary data file is \n for CrowdEgress or FDS+Evac!")
         #Button(window, text='choose csv file for door data', command=lambda: selectFile(2)).pack()
 
         #if CheckVar1.get():
@@ -173,18 +176,34 @@ class GUI(object):
         if os.path.exists(self.FNTemp) and self.fname_FDS is None and self.fname_EVAC is None and self.fname_EVACtxt is None:
         #if self.FNTemp is not None:
             for line in open(self.FNTemp, "r"):
-                #if re.match('FN_FDS', line):
-                #    temp =  line.split('=')
-                #    self.fname_FDS = temp[1].strip()
-                #    self.lb0.config(text = "The FDS data file selected in the last run.\n")
+                if re.match('FN_FDS', line):
+                    temp =  line.split('=')
+                    self.fname_FDS = temp[1].strip()
+                    self.lb0.config(text = "The FDS data file selected in the last run.\n"+str(self.fname_FDS))
 
                 if re.match('FN_EVAC', line):
                     temp =  line.split('=')
                     self.fname_EVAC = temp[1].strip()
-                    self.lb1.config(text = "The input prt5 data file selected in the last run:\n"+str(self.fname_EVAC))
                     self.openfn  = os.path.basename(self.fname_EVAC)
                     self.opendir = os.path.dirname(self.fname_EVAC)
-                    
+                    self.lb1.config(text = "The input binary data file selected:\n"+str(self.openfn))
+                    self.lb2.config(text = "Working path:\n"+str(self.opendir))
+
+                    temp=self.fname_EVAC.split('.')
+                    self.fname_EVACtxt = temp[0]+'.txt' 
+                    self.fname_EVACnpz = temp[0]+'.npz'
+
+                    temp = self.openfn.split('.')
+                    suffix = str(temp[-1].strip())
+                    if suffix == 'bin':
+                        self.buttonPlotTpre.configure(state='enabled')
+                        self.buttonPlotStress.configure(state='enabled')
+                        self.buttonPlotDoorProb.configure(state='enabled')
+                    if suffix == 'prt5':
+                        self.buttonPlotTpre.configure(state='disabled')
+                        self.buttonPlotStress.configure(state='disabled')
+                        self.buttonPlotDoorProb.configure(state='disabled')
+
                 if re.match('FN_EVACtxt', line):
                     temp =  line.split('=')
                     self.fname_EVACtxt = temp[1].strip()
@@ -192,7 +211,7 @@ class GUI(object):
 
             self.textInformation.insert(END, '\n'+'FDS Input File Selected in the last run:   '+str(self.fname_FDS)+'\n')
             self.textInformation.insert(END, '\n'+'EVAC prt5 Data Selected in the last run:   '+str(self.fname_EVAC)+'\n')
-            self.textInformation.insert(END, '\n'+'EVAC txt file Selected in the last run:   '+str(self.fname_EVACtxt)+'\n')
+            self.textInformation.insert(END, '\n'+'EVAC txt file Selected:   '+str(self.fname_EVACtxt)+'\n')
 
     def start(self):
         self.window.mainloop()
@@ -224,7 +243,7 @@ class GUI(object):
         #temp=re.split(r'/', self.fname_FDS)
         self.opendir = os.path.dirname(self.fname_FDS)
         temp=self.fname_FDS.split('/')
-        self.lb0.config(text = "If fds is selected, the compartment geometry is created by fds file. \n"+"The FDS data file selected: "+str(temp[-1])+"\n")
+        self.lb0.config(text = "The compartment layout is created by fds file. \n"+"The FDS data file selected: \n "+str(temp[-1])+"\n")
         self.textInformation.insert(END, '\n'+'FDS Input File Selected:  '+self.fname_FDS+'\n'+'Please note that if users plan to visualize prt5 data file, the compartment geometry is created by fds file as selected. \n However, the program will not check if the prt5 data is exactly generated from the fds file as selected. ')
         print('fname_FDS:', self.fname_FDS)
         self.setStatusStr("Select FDS Input File.")
@@ -261,8 +280,19 @@ class GUI(object):
                 print("Write EVAC filename in log")
             if suffix == 'bin':
                 msg.showinfo("CrowdEgress data file selected",  "CrowdEgress binary data file selected. \n Users may write the binary data into a text file or directly visualize the data file \n" +self.opendir + '\n' + self.openfn)
+                temp=self.fname_EVAC.split('.')
+                self.fname_EVACtxt = temp[0]+'.txt' 
+                self.fname_EVACnpz = temp[0]+'.npz'
+                self.buttonPlotTpre.configure(state='enabled')
+                self.buttonPlotStress.configure(state='enabled')
+                self.buttonPlotDoorProb.configure(state='enabled')
+
             elif suffix == 'prt5':
-                msg.showinfo("FDS+Evac data file selected",  "FDS+Evac binary data file selected. \n Users may write the binary data into a text file or directly visualize the data file \n" +self.opendir + '\n' + self.openfn)
+                msg.showinfo("FDS+Evac data file selected",  "FDS+Evac binary data file selected. \n Users may write the binary data into a text file or directly visualize the data file \n" +self.opendir + '\n' + self.openfn+'\n Np plot functions for FDS+Evac prt5 data!')
+                self.buttonPlotTpre.configure(state='disabled')
+                self.buttonPlotStress.configure(state='disabled')
+                self.buttonPlotDoorProb.configure(state='disabled')
+                
             else:
                 msg.showinfo("No proper binary data file selected",  "No binary data file selected.  Please select an binary data file. \n Data file suffix: .bin or .prt5")
         else:
@@ -270,15 +300,14 @@ class GUI(object):
             
             
     def readData(self):
-        self.fname_EVAC = tkf.askopenfilename(filetypes=(("All files", "*.*"), ("prt5 files", "*.prt5")), initialdir=self.opendir)
+        #self.fname_EVAC = tkf.askopenfilename(filetypes=(("All files", "*.*"), ("prt5 files", "*.prt5")), initialdir=self.opendir)
         #self.FN[1]=self.fname_EVAC
-        self.openfn  = os.path.basename(self.fname_EVAC)
-        self.opendir = os.path.dirname(self.fname_EVAC)
+        #self.openfn  = os.path.basename(self.fname_EVAC)
+        #self.opendir = os.path.dirname(self.fname_EVAC)
         self.lb1.config(text = "The input binary data file selected: "+ self.openfn +"\n")
-        self.textInformation.insert(END, '\n'+'EVAC Binary Data Selected:   '+self.fname_EVAC+'\n')
-        print('fname_EVAC', self.fname_EVAC)
+        self.textInformation.insert(END, '\n'+'Write Binary Data into text file:   '+self.fname_EVAC+'\n')
         temp = self.openfn.split('.')
-        print(temp)
+        print('fname_EVAC', self.fname_EVAC, temp)
         suffix = str(temp[-1].strip())
         self.setStatusStr("Select Evac Binary Data File.")
         
@@ -324,9 +353,9 @@ class GUI(object):
         #self.setStatusStr("Visualize Prt5 Data by Pygame!")
         #self.textInformation.insert(END, "\nVisualize Prt5 Data by Pygame!\n")
 
-        self.fname_EVAC = tkf.askopenfilename(filetypes=(("All files", "*.*"), ("prt5 files", "*.prt5"),  ("binary files", "*.bin")), initialdir=self.opendir)
-        self.openfn  = os.path.basename(self.fname_EVAC)
-        self.opendir = os.path.dirname(self.fname_EVAC)
+        #self.fname_EVAC = tkf.askopenfilename(filetypes=(("All files", "*.*"), ("prt5 files", "*.prt5"),  ("binary files", "*.bin")), initialdir=self.opendir)
+        #self.openfn  = os.path.basename(self.fname_EVAC)
+        #self.opendir = os.path.dirname(self.fname_EVAC)
         temp=self.openfn.split('.')
         fnsuffix=temp[-1]
         self.lb1.config(text = "The input binary data file selected: "+str(temp[-1])+"\n")
@@ -395,7 +424,7 @@ class GUI(object):
         self.fname_EVACtxt = tkf.askopenfilename(filetypes=(("All files", "*.*"), ("txt files", "*.txt")), initialdir=self.opendir)
         self.opendir = os.path.dirname(self.fname_EVACtxt)
         temp=self.fname_EVACtxt.split('/') 
-        self.lb1.config(text = "The output exit probability data file selected: "+str(temp[-1])+"\n")
+        self.lb1.config(text = "The output exit probability data file selected: \n"+str(temp[-1])+"\n")
         self.textInformation.insert(END, '\n'+'EVAC exit probability Data Selected:   '+self.fname_EVACtxt+'\n')
         print('fname_EVACtxt', self.fname_EVACtxt)
         self.setStatusStr("Select Evac output txt data File.")

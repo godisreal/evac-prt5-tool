@@ -1,0 +1,6 @@
+FN_EVAC=./examples/TASE_Conferece2008/agent2024Apr_2024-10-25_17_31_46.bin
+Working path=./examples/TASE_Conferece2008
+FN_EVAC=./examples/3Choices/agent2024_3doors_2024-10-25_17_37_01.bin
+Working path=./examples/3Choices
+FN_EVAC=./examples/opinion_2choices/agent2024Aug_2024-12-19_14_56_33.bin
+Working path=./examples/opinion_2choices
