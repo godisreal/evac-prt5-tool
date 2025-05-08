@@ -91,6 +91,8 @@ CALL WRITE_STATUS_FILES
 ! Stop all the processes if this is just a set-up run
  
 IF (SET_UP) CALL SHUTDOWN('Stop FDS, Set-up only')
+
+
  
 ! Set up Time array (All Nodes)
  
