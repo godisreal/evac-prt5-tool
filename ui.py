@@ -65,7 +65,7 @@ class GUI(object):
 
         self.window = Tk()
         self.window.title('evac prt5 tool')
-        self.window.geometry('970x590')
+        self.window.geometry('970x690')
 
         self.notebook = Notebook(self.window)      
         self.notebook.pack(side=TOP, padx=2, pady=2)
@@ -179,11 +179,19 @@ class GUI(object):
         self.lbsm = Label(self.window, text = "\n====== Generate smv Script for Smokeview As Below ======\n")
         self.lbsm.pack()
 
-        self.buttonSMV = Button(self.window, text='Write smv script for smokeview', width=38, command=self.plotExitProb)
+        self.buttonSMV = Button(self.window, text='Write smv script for smokeview', width=38, command=self.generateSMV)
         self.buttonSMV.pack()
         self.showHelp(self.buttonSMV, "Trial: Combine the fds file and binary data file together \n to write a smv script for smokeview!  This is a trial!")
         #buttonStart.place(x=5,y=220)
         #print(self.fname_FDS, self.fname_EVAC)
+
+        self.buttonFDS = Button(self.window, text='Modify FDS script for smokeview', width=38, command=self.modifyFDS)
+        self.buttonFDS.pack()
+        self.showHelp(self.buttonFDS, "Trial: Modify the fds file selected \n in order to write a smv script for smokeview!  This is a trial!")
+
+        self.buttonManuallySMV = Button(self.window, text='Modify smv script manually', width=38, command=self.modifyFDS)
+        self.buttonManuallySMV.pack()
+        self.showHelp(self.buttonManuallySMV, "Trial: Manually modify a smv script as selected \n in order to write a smv script for smokeview!  This is a trial!")
 
         if os.path.exists(self.FNTemp) and self.fname_FDS is None and self.fname_EVAC is None and self.fname_EVACtxt is None:
         #if self.FNTemp is not None:
@@ -225,6 +233,7 @@ class GUI(object):
             self.textInformation.insert(END, '\n'+'EVAC prt5 Data Selected in the last run:   '+str(self.fname_EVAC)+'\n')
             self.textInformation.insert(END, '\n'+'EVAC txt file Selected:   '+str(self.fname_EVACtxt)+'\n')
 
+
     def start(self):
         self.window.mainloop()
 
@@ -251,7 +260,6 @@ class GUI(object):
        
     def selectFDSFile(self):
         self.fname_FDS = tkf.askopenfilename(filetypes=(("All files", "*.*"), ("fds files", "*.fds")), initialdir=self.opendir)
-        #self.FN[0]=self.fname_FDS
         #temp=re.split(r'/', self.fname_FDS)
         self.opendir = os.path.dirname(self.fname_FDS)
         temp=self.fname_FDS.split('/')
@@ -440,20 +448,25 @@ class GUI(object):
             #exit(-1)
             
 
-    def plotTpre(self):
+    def plotTpre(self, event=None):
         self.setStatusStr("Plot pre-movement time of multiple agent!")
         self.textInformation.insert(END, '\n'+'Output Tpre Binary File Selected (Pre-Evacuation Time): '+self.fname_EVAC+'\n')
         visualizeTpre(self.fname_EVAC)
 
-    def plotStress(self):
+    def plotStress(self, event=None):
         self.setStatusStr("Plot stress level of multiple agent!")
         self.textInformation.insert(END, '\n'+'Output Stress Binary File Selected (Agent Stress Level): '+self.fname_EVAC+'\n')
         visualizeStress(self.fname_EVAC)
 
+    def generateSMV(self, event=None):
+        os.system('D:\evac-prt5-tool\write_smokeview_file\generateSMV.exe '+ os.path.join(self.fname_FDS))
+
+    def modifyFDS(self, event=None):
+        os.system('notepad '+ os.path.join(self.fname_FDS))
+
+    def modifyEVAC(self, event=None):
+        os.system('notepad '+ os.path.join(self.fname_EVAC))
 
 if __name__ == '__main__':
     myGUI=GUI()
     myGUI.start()
-
-
-    
