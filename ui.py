@@ -59,6 +59,7 @@ class GUI(object):
         
         self.openfn  = None
         self.opendir = None
+        self.rootdir=os.getcwd()
 
         self.fname_EVACtxt = None
         self.fname_EVACnpz = None
@@ -189,9 +190,10 @@ class GUI(object):
         self.buttonFDS.pack()
         self.showHelp(self.buttonFDS, "Trial: Modify the fds file selected \n in order to write a smv script for smokeview!  This is a trial!")
 
-        self.buttonManuallySMV = Button(self.window, text='Modify smv script manually', width=38, command=self.modifyFDS)
-        self.buttonManuallySMV.pack()
-        self.showHelp(self.buttonManuallySMV, "Trial: Manually modify a smv script as selected \n in order to write a smv script for smokeview!  This is a trial!")
+        self.buttonSMV = Button(self.window, text='Start smokeview and select smv script', width=38, command=self.startSMV)
+        self.buttonSMV.pack()
+        self.showHelp(self.buttonSMV, "Start program of smokeview and select a smv script to visualize output data!  \n This is a trial!")
+        #self.showHelp(self.buttonManuallySMV, "Trial: Manually modify a smv script as selected \n in order to write a smv script for smokeview!  This is a trial!")
 
         if os.path.exists(self.FNTemp) and self.fname_FDS is None and self.fname_EVAC is None and self.fname_EVACtxt is None:
         #if self.FNTemp is not None:
@@ -459,13 +461,27 @@ class GUI(object):
         visualizeStress(self.fname_EVAC)
 
     def generateSMV(self, event=None):
-        os.system('D:\evac-prt5-tool\write_smokeview_file\generateSMV.exe '+ os.path.join(self.fname_FDS))
+        sunpro2 = mp.Process(target=self.command()) 
+        sunpro2.start()
+        sunpro2.join()
 
+    def command(self, event=None):
+        print(os.path.dirname(self.fname_FDS))
+        os.chdir(os.path.dirname(self.fname_FDS))
+        #print(os.getcwd())
+        #os.system(os.path.join(self.rootdir, '\write_smokeview_file\generateSMV.exe ')+ self.fname_FDS)
+        os.system('d:\evac-prt5-tool\write_smokeview_file\generateSMV.exe '+ self.fname_FDS)
+        os.chdir(self.rootdir)
+        
     def modifyFDS(self, event=None):
         os.system('notepad '+ os.path.join(self.fname_FDS))
 
     def modifyEVAC(self, event=None):
         os.system('notepad '+ os.path.join(self.fname_EVAC))
+
+    def startSMV(self, event=None):
+        #os.system(os.path.join(self.rootdir, '\SMV6\smokeview.exe')) #+ os.path.join(self.fname_EVAC))
+        os.system('.\SMV6\smokeview.exe') #+ os.path.join(self.fname_EVAC))
 
 if __name__ == '__main__':
     myGUI=GUI()
