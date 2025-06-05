@@ -61,6 +61,7 @@ class GUI(object):
         self.opendir = None
         self.rootdir=os.getcwd()
 
+        self.fname_smv = None
         self.fname_EVACtxt = None
         self.fname_EVACnpz = None
 
@@ -194,6 +195,12 @@ class GUI(object):
         self.buttonSMV.pack()
         self.showHelp(self.buttonSMV, "Start program of smokeview and select a smv script to visualize output data!  \n This is a trial!")
         #self.showHelp(self.buttonManuallySMV, "Trial: Manually modify a smv script as selected \n in order to write a smv script for smokeview!  This is a trial!")
+
+
+        self.buttonRevSMV = Button(self.window, text='Select and modify a smv script', width=38, command=self.revSMV)
+        self.buttonRevSMV.pack()
+        #self.showHelp(self.buttonSMV, "Start program of smokeview and select a smv script to visualize output data!  \n This is a trial!")
+        self.showHelp(self.buttonRevSMV, "Trial: Manually modify a smv script as selected \n in order to write a smv script for smokeview!  This is a trial!")
 
         if os.path.exists(self.FNTemp) and self.fname_FDS is None and self.fname_EVAC is None and self.fname_EVACtxt is None:
         #if self.FNTemp is not None:
@@ -472,6 +479,7 @@ class GUI(object):
         #os.system(os.path.join(self.rootdir, '\write_smokeview_file\generateSMV.exe ')+ self.fname_FDS)
         os.system('d:\evac-prt5-tool\write_smokeview_file\generateSMV.exe '+ self.fname_FDS)
         os.chdir(self.rootdir)
+        print(self.fname_FDS)
         
     def modifyFDS(self, event=None):
         os.system('notepad '+ os.path.join(self.fname_FDS))
@@ -482,6 +490,14 @@ class GUI(object):
     def startSMV(self, event=None):
         #os.system(os.path.join(self.rootdir, '\SMV6\smokeview.exe')) #+ os.path.join(self.fname_EVAC))
         os.system('.\SMV6\smokeview.exe') #+ os.path.join(self.fname_EVAC))
+
+    def revSMV(self, event=None):
+        self.fname_smv = tkf.askopenfilename(filetypes=(("smv files", "*.smv"), ("All files", "*.*")), initialdir=self.opendir)
+        self.textInformation.insert(END, '\n'+'SMV Script Selected:   '+self.fname_smv+'\n')
+        print('fname_smv', self.fname_smv)
+        self.setStatusStr("Select and View a SMV Script File.")
+        os.system('notepad '+ os.path.join(self.fname_smv))
+
 
 if __name__ == '__main__':
     myGUI=GUI()
