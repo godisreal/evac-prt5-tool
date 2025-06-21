@@ -1,0 +1,176 @@
+<html>
+<head>
+<TITLE>Smokeview Release Notes</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" >
+<h2>Smokeview Release Notes</h2>
+<p><hr size="1">
+<p>Latest FDS and Smokeview available at 
+<a href="http://fire.nist.gov/fds">http://fire.nist.gov/fds</a>
+<ul>
+<li>5.2.2 (build 2050) - July 18, 2008
+<ol>
+<li>fix - Circular Tour was missing from Tour menu.  Fix by adding <em>Show Tours</em> menu when there is only one Tour.
+(<a href="http://code.google.com/p/fds-smv/issues/detail?id=412&can=1&sort=-id">Issue 412</a>).
+</ol>
+<li>5.2 (build 2039) - July 17, 2008
+<ol>
+<li>enhancement - Add an option to speed up smoke visualization by using the 
+graphics programming unit (GPU) to perform some of the needed computations.
+This option is not supported on Linux or Mac OSX releases of Smokeview.  
+The option is turned off
+by default and may be toggled on and off by pressing the 'G' key.
+
+<li>enhancement - add the ability to run Smokeview in a <em>batch</em> or unattended
+mode.  This mode may be used to automatically load a data file, view it from 
+a prescribed direction and render the resulting image.  This may be repeated for other views
+and/or other data files.  A script named <em>casename.ssf</em> may be executed by typing
+<p><tt>smokeview -runscript casename </tt>
+<p>at a command line or from the <tt>Load/Unload>Script Options</tt> menu.
+Scripts are created by adding desired commands to a text file named casename.ssf 
+or by turning on the <em>script recorder</em> found in the 
+Load/Unload>Script Options menu.
+
+<li>enhancment - internal change in smokeview resulting in reduced memory 
+requirements when loading large cases.
+
+<li>enhancement - When performing WUI computations, allow slice and vector slice files to conform to a 
+specified distance above the ground or terrain.
+
+<li>fix - fix bug that occurs when reading the hrr csv file while it is being written to.
+
+<li>fix - fix bug that occurs when drawing smoke on a computer without a GPU enabled video card.
+
+<li>fix - force terrain normals to be smooth across mesh boundaries so that seams 
+are not visible
+
+<li>fix - fix time advance when adjusting 3D slice/vector files.
+
+</ol>
+<li>5.1.6 (build 1736) - May 31, 2008
+<ol>
+<li>enhancement - allow slice and vector slice files to conform to terrain (for WUI applications)
+<li>fix - print out the keyword &TAIL at the end of the file when editing blockages
+(<a href="http://code.google.com/p/fds-smv/issues/detail?id=366&can=1&sort=-id">Issue 366</a>).
+<li>fix - fix display of PLOT3D contours
+(<a href="http://code.google.com/p/fds-smv/issues/detail?id=361&can=1&sort=-id">Issue 361</a>).
+<li>fix - fix lighting bug when displaying terrain
+</ol>
+<li>5.1.5 (build 1666) - May 10, 2008
+<ol>
+<li>fix - fix display of hrrpuv cutoff value
+(<a href="http://code.google.com/p/fds-smv/issues/detail?id=355&can=1&sort=-id">Issue 355</a>).
+</ol>
+<li>5.1.4 (build 1635) - May 5, 2008
+<ol>
+<li>enhancement - save smooth blockages to a file so that their definition may be read in rather than re-calculated.  
+<li>enhancement - add an option to simplify file compression by compressing only files that were selected for auto-loading.
+<li>enhancement - save the size preserving or perspective projection state in the .ini file
+(<a href="http://code.google.com/p/fds-smv/issues/detail?id=331&can=1&sort=-id">Issue 331</a>).
+<li>enhancement - implement the "AUTOTERRAIN" keyword for WUI applications of FDS.  If all blockages are used to implement terrain
+(ie no blockages are used to represent buildings on the terrain), then AUTOTERRAIN is used to signal Smokeview to draw a smooth 
+surface representing the terrain.
+<li>enhancement -  add option to toggle slice file offset - 
+(<a href="http://code.google.com/p/fds-smv/issues/detail?id=348&can=1&sort=-id">Issue 348</a>).
+<li>enhancement - add support for skipping particle frames created by FDS 5 or later.
+(<a href="http://code.google.com/p/fds-smv/issues/detail?id=350&can=1&sort=-id">Issue 350</a>).
+<li>fix - For particle files created by FDS 5, remove the particle skip option as it is no longer supported. (<a href="http://code.google.com/p/fds-smv/issues/detail?id=350&can=1&sort=-id">Issue 350</a>).
+<li>fix - change a conversion factor from 256*128 to 256*128-1 to avoid a "short int" overflow.   Otherwise, some
+particles may be drawn outside the solution domain.
+(<a href="http://code.google.com/p/fds-smv/issues/detail?id=323&can=1&sort=-id">Issue 323</a>).
+<li>fix - fix the 't' toggle when the grid is turned on.
+(<a href="http://code.google.com/p/fds-smv/issues/detail?id=334&can=1&sort=-id">Issue 334</a>).
+<li>fix - force smooth blockages to be drawn opaquely to prevent drawing artifact errors when drawn with smoke.
+(<a href="http://code.google.com/p/fds-smv/issues/detail?id=329&can=1&sort=-id">Issue 329</a>).
+<li>fix - Fix drawing when smoke, iso and slice routines have non-increasing time steps.
+This could occur when FDS is restarted to an earlier time than was saved in these data files.
+(<a href="http://code.google.com/p/fds-smv/issues/detail?id=317&can=1&sort=-id">Issue 317</a>).
+<li>fix - fix drawing of text on the colorbar 
+(<a href="http://code.google.com/p/fds-smv/issues/detail?id=325&can=1&sort=-id">Issue 325</a>).
+</ol>
+<li>5.1.3 (build 1501) - March 26, 2008
+<ol>
+<li>enhancement -  redo grid show menu to make clearer which grid planes will be visible once grid drawing is turned on.  
+(<a href="http://code.google.com/p/fds-smv/issues/detail?id=308&can=1&sort=-id">Issue 308</a>)
+<li>fix - fix data chopping (<a href="http://code.google.com/p/fds-smv/issues/detail?id=303&can=1&sort=-id">Issue 303</a>).
+</ol>
+
+<li>5.1.2 (build 1426) - March 11, 2008
+<ol>
+<li>enhancement - add option to select frame skip for isosurface and slice files (in addition to boundary and 3D 
+smoke files) when compressing data with smokezip.
+<li>enhancement - add demo mode, activated by copying casename.smv to casename.svd .  
+This mode is used to demonstrate an FDS/Smokeview case by presenting a simplified dialog box with pre-defined tours
+<li>enhancement - add the command line option -skip val to the companion program <bold>smokezip</bold> to allow
+frame skipping specifiation when running this tool from a command shell.
+</ol>
+<li>5.1 (build 1345) - February 20, 2008
+<ol>
+<li>enhancement - add demo mode, activated by copying casename.smv to casename.svd .  
+This mode is used to demonstrate an FDS/Smokeview case by presenting a simplified dialog box with pre-defined tours
+and viewpoints (defined in an .ini file).  Further details are found in the Smokeview user's guide.
+<li>enhancement - add avatars to FDS-EVAC visualizations and Smokeview tours.  Avatars are defined in the device.svo file.
+<li>enhancement - add option to clip ONLY scene geometry allowing FDS data to remain visible.
+<li>enhancement - smooth blockages are now handled better.
+<ol>
+<li>An option has been added to smooth blockages (or not) at startup.
+<li>Smooth blockages are now saved to a file the first time a case is loaded for quicker subsequent startups.
+</ol>
+<li>fix - fix problem with running smokezip (caused by imbedded blanks in the path name) from Smokeview 
+(<a href="http://code.google.com/p/fds-smv/issues/detail?id=283&can=1&sort=-id">issue 283</a>)
+<li>fix - fix problem with menu disconnects (<a href="http://code.google.com/p/fds-smv/issues/detail?id=263&can=1&sort=-id">issues 263</a>).
+<li>fix - add missing scaling info to PART5 colorbar label (<a href="http://code.google.com/p/fds-smv/issues/detail?id=269&can=1&sort=-id">issue 269</a>).
+</ol>
+<li>5.0.7 (build 1136) - December 30, 2007
+<ol>
+<li>fix - Hide blockages when using the <tt>Hide All</tt> Geometry menu item so that all geometry is hidden.
+</ol>
+<li>5.0.6 (build 1042) - November 30, 2007
+<ol>
+<li>fix - fix error in colorbar when displaying CFAST zone data 
+(<a href="http://code.google.com/p/fds-smv/issues/detail?id=234&can=1&sort=-id">issue 234</a>).
+</ol>
+<li>5.0.5 (build 940) - November 6, 2007
+<ol>
+<li>enhancement - add hrr cutoff parameter to .ini file.
+<li>fix - fix errors in device file input that occur when smokeview is run from a command line
+(smokeview bin directory was defined improperly) (<a href="http://code.google.com/p/fds-smv/issues/detail?id=217&can=1&sort=-id">issue 217</a>).
+</ol>
+<li>5.0.4 (build 875) - October 25, 2007
+<ol>
+<li>enhancement - Add option to toggle vent transparency. <br>
+(Show/Hide>Geometry>Vents)
+<li>enhancement - Add option to highlight data with values outside of colorbar range<br>
+(Options>Shades>Colorbars)
+<li>fix - colorbar selection (<a href="http://code.google.com/p/fds-smv/issues/detail?id=126&can=1&sort=-id">issue 126</a>).
+<li>fix - vent transparency .
+</ol>
+<li>5.0.3 (build 863) - October 18, 2007
+<ol>
+<li>fix - missing slice file menu entries (<a href="http://code.google.com/p/fds-smv/issues/detail?id=209&can=1&sort=-id">Issue 209</a>).
+<li>fix - crash when particle file reloading (<a href="http://code.google.com/p/fds-smv/issues/detail?id=203&can=1&sort=-id">Issue 203</a>).
+<li>maintenance - internal source clean up to remove more un-needed compiler directives.
+</ol>
+<li>5.0.2 (build 826) - October 10, 2007
+<ol>
+<li>enhancement - changed default color of first iso-surface to purple to address fire colorization detailed in 
+<a href="http://code.google.com/p/fds-smv/issues/detail?id=196&can=1&sort=-id">Issue 196</a>.
+<li>maintenance - internal source clean up to remove un-needed compiler directives.
+</ol>
+
+<li>5.0.1 (build 730) - October 1, 2007<br>
+enhancement - Display versioning information (svn build number, compile date, <em>etc.</em>) 
+in the help menu and when Smokeview is run at a command line.
+<li>5.0.0 (build 661) - September 19, 2007<br>
+Official public release
+</ul>
+<hr>
+<p><address>
+<A HREF="http://www.bfrl.nist.gov" >Building and Fire Research Laboratory</A><BR>
+<a href="http://www.nist.gov" >National Institute of Standards and Technology</a><br>
+Gaithersburg, MD 20899
+</address>
+
+
+</BODY>
+</HTML>
