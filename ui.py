@@ -181,26 +181,29 @@ class GUI(object):
         self.lbsm = Label(self.window, text = "\n====== Generate smv Script for Smokeview As Below ======\n")
         self.lbsm.pack()
 
-        self.buttonSMV = Button(self.window, text='Write smv script for smokeview', width=38, command=self.generateSMV)
+        self.buttonSMV = Button(self.window, text='Write smv script from smokeview', width=38, command=self.generateSMV)
         self.buttonSMV.pack()
         self.showHelp(self.buttonSMV, "Trial: Combine the fds file and binary data file together \n to write a smv script for smokeview!  This is a trial!")
         #buttonStart.place(x=5,y=220)
         #print(self.fname_FDS, self.fname_EVAC)
 
-        self.buttonFDS = Button(self.window, text='Modify FDS script for smokeview', width=38, command=self.modifyFDS)
-        self.buttonFDS.pack()
-        self.showHelp(self.buttonFDS, "Trial: Modify the fds file selected \n in order to write a smv script for smokeview!  This is a trial!")
-
+        self.buttonJointSMV = Button(self.window, text='Add binary evac data to a smv script', width=38, command=self.generateSMV)
+        self.buttonJointSMV.pack()
+        self.showHelp(self.buttonJointSMV, "Trial: Combine a smv script and a binary data file together \n to write a new smv script for smokeview!  This is a trial!")
+   
         self.buttonSMV = Button(self.window, text='Start smokeview and select smv script', width=38, command=self.startSMV)
         self.buttonSMV.pack()
         self.showHelp(self.buttonSMV, "Start program of smokeview and select a smv script to visualize output data!  \n This is a trial!")
         #self.showHelp(self.buttonManuallySMV, "Trial: Manually modify a smv script as selected \n in order to write a smv script for smokeview!  This is a trial!")
 
-
-        self.buttonRevSMV = Button(self.window, text='Select and modify a smv script', width=38, command=self.revSMV)
+        self.buttonRevSMV = Button(self.window, text='Open and modify a smv script', width=38, command=self.revSMV)
         self.buttonRevSMV.pack()
         #self.showHelp(self.buttonSMV, "Start program of smokeview and select a smv script to visualize output data!  \n This is a trial!")
         self.showHelp(self.buttonRevSMV, "Trial: Manually modify a smv script as selected \n in order to write a smv script for smokeview!  This is a trial!")
+
+        self.buttonFDS = Button(self.window, text='Open and modify a FDS script', width=38, command=self.modifyFDS)
+        self.buttonFDS.pack()
+        self.showHelp(self.buttonFDS, "Trial: Modify the fds file selected \n in order to write a smv script for smokeview!  This is a trial!")
 
         if os.path.exists(self.FNTemp) and self.fname_FDS is None and self.fname_EVAC is None and self.fname_EVACtxt is None:
         #if self.FNTemp is not None:
@@ -489,7 +492,7 @@ class GUI(object):
 
     def startSMV(self, event=None):
         #os.system(os.path.join(self.rootdir, '\SMV6\smokeview.exe')) #+ os.path.join(self.fname_EVAC))
-        os.system('.\SMV6\smokeview.exe') #+ os.path.join(self.fname_EVAC))
+        os.system('.\SMV5\smokeview.exe') #+ os.path.join(self.fname_EVAC))
 
     def revSMV(self, event=None):
         self.fname_smv = tkf.askopenfilename(filetypes=(("smv files", "*.smv"), ("All files", "*.*")), initialdir=self.opendir)
