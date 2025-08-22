@@ -692,6 +692,24 @@ def visualizeFdsEvac(fname, fdsfile=None, Zmin=0.0, Zmax=3.0):
                 (mouseX, mouseY) = pygame.mouse.get_pos()
                 #button = pygame.mouse.get_pressed()            
             # elif event.type == pygame.MOUSEBUTTONUP:
+                button = pygame.mouse.get_pressed()
+                print('Three Buttons:', button)#1, button2, button3)
+
+                # The button response may some problem in pygame.
+                # So I will not use it (Not differentiate if it is right key or left key in mouse pressed)
+                if button == (1,0,0):
+                    REWIND = True
+                    PAUSE = True
+                    
+                if button ==(0,0,1):
+                    FORWARD = True
+                    PAUSE = True
+
+                if event.button == 4:
+                    ZOOMFACTOR = ZOOMFACTOR +2
+                if event.button == 5:
+                    ZOOMFACTOR = max(6.0, ZOOMFACTOR -2)
+
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_PAGEUP:
                     ZOOMFACTOR = ZOOMFACTOR +1
@@ -994,6 +1012,24 @@ def visualizeAgent(fname, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=2
                 mouse_pos = np.array([mouseX, mouseY])
                 px1 = (mouse_pos-xyShift)*(1/ZOOMFACTOR)
                 drawLine = False
+
+                button = pygame.mouse.get_pressed()
+                print('Three Buttons:', button)#1, button2, button3)
+
+                # The button response may some problem in pygame.
+                # So I will not use it (Not differentiate if it is right key or left key in mouse pressed)
+                if button == (1,0,0):
+                    REWIND = True
+                    PAUSE = True
+                    
+                if button ==(0,0,1):
+                    FORWARD = True
+                    PAUSE = True
+
+                if event.button == 4:
+                    ZOOMFACTOR = ZOOMFACTOR +2
+                if event.button == 5:
+                    ZOOMFACTOR = max(6.0, ZOOMFACTOR -2)
 
                 #button = pygame.mouse.get_pressed()            
             elif event.type == pygame.MOUSEBUTTONUP:
