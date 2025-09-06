@@ -47,10 +47,17 @@ VIEWTIMES
 '''
 def parseTIME(lines, i):
     temp=re.split(r'\s*[;\|\s]\s*', lines[i+1])
-    tStart = float(temp[0])
-    tEnd = float(temp[1])
-    numFrames = int(temp[2])
+    print(temp)
+    try:
+        tStart = float(temp[0])
+        tEnd = float(temp[1])
+        numFrames = int(temp[2])
+    except:
+        tStart = float(temp[1])
+        tEnd = float(temp[2])
+        numFrames = int(temp[3])
     return tStart, tEnd, numFrames
+    
 
 def parseSMV_VIEWTIMES(smvFile):
     linesSMV = zreadlines(smvFile)

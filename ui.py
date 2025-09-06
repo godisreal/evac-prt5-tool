@@ -2,6 +2,7 @@
 import os, sys
 import multiprocessing as mp
 from visualize_func import *
+from smokeviewParser import *
 from read_evac import *
 #import matplotlib.pyplot as plt
 #from data_func.py import *
@@ -187,7 +188,7 @@ class GUI(object):
         #buttonStart.place(x=5,y=220)
         #print(self.fname_FDS, self.fname_EVAC)
 
-        self.buttonJointSMV = Button(self.window, text='Add binary evac data to a smv script', width=38, command=self.generateSMV)
+        self.buttonJointSMV = Button(self.window, text='Add binary evac data to a smv script', width=38, command=self.jointSMV)
         self.buttonJointSMV.pack()
         self.showHelp(self.buttonJointSMV, "Trial: Combine a smv script and a binary data file together \n to write a new smv script for smokeview!  This is a trial!")
    
@@ -201,7 +202,7 @@ class GUI(object):
         #self.showHelp(self.buttonSMV, "Start program of smokeview and select a smv script to visualize output data!  \n This is a trial!")
         self.showHelp(self.buttonRevSMV, "Trial: Manually modify a smv script as selected \n in order to write a smv script for smokeview!  This is a trial!")
 
-        self.buttonFDS = Button(self.window, text='Open and modify a FDS script', width=38, command=self.modifyFDS)
+        self.buttonFDS = Button(self.window, text='Open and modify a FDS script', width=38, command=self.revFDS)
         self.buttonFDS.pack()
         self.showHelp(self.buttonFDS, "Trial: Modify the fds file selected \n in order to write a smv script for smokeview!  This is a trial!")
 
@@ -483,16 +484,32 @@ class GUI(object):
         os.system('d:\evac-prt5-tool\write_smokeview_file\generateSMV.exe '+ self.fname_FDS)
         os.chdir(self.rootdir)
         print(self.fname_FDS)
-        
-    def modifyFDS(self, event=None):
-        os.system('notepad '+ os.path.join(self.fname_FDS))
 
-    def modifyEVAC(self, event=None):
-        os.system('notepad '+ os.path.join(self.fname_EVAC))
+    def jointSMV(self, event=None):
+        self.fname_smv = tkf.askopenfilename(filetypes=(("smv files", "*.smv"), ("All files", "*.*")), initialdir=self.opendir)
+        self.textInformation.insert(END, '\n'+'SMV Script Selected:   '+self.fname_smv+'\n')
+        tstart, tend, nFrames = parseSMV_VIEWTIMES(self.fname_smv)
+        self.textInformation.insert(END, '\n'+'tstart: '+str(tstart)+'\n'+'tend:'+str(tend)+'\n'+'nFrames:'+str(nFrames)+'\n')
+        deltaT = (tend - tstart)/nFrames
+        #Time, XYZ, TAG, INFO, n_part, n_agents, n_quant = readPRTfile(self.fname_EVAC, wrtxt=False)
+        try:
+            Time, XYZ, TAG, INFO, n_part, version, n_quant = readPRTfile(self.fname_EVAC, wrtxt=False)
+        except:
+            Time, XYZ, TAG, n_part, version, n_quant = readPRTfileNoQ(self.fname_EVAC, wrtxt=False)
+        TLength = len(Time)
+        deltaT2 = (Time[-1]-Time[0])/TLength
+        print(deltaT2, TLength)
+        print('\n\n', Time)
 
     def startSMV(self, event=None):
         #os.system(os.path.join(self.rootdir, '\SMV6\smokeview.exe')) #+ os.path.join(self.fname_EVAC))
         os.system('.\SMV5\smokeview.exe') #+ os.path.join(self.fname_EVAC))
+        
+    def revFDS(self, event=None):
+        os.system('notepad '+ os.path.join(self.fname_FDS))
+
+    def revEVAC(self, event=None):
+        os.system('notepad '+ os.path.join(self.fname_EVAC))
 
     def revSMV(self, event=None):
         self.fname_smv = tkf.askopenfilename(filetypes=(("smv files", "*.smv"), ("All files", "*.*")), initialdir=self.opendir)
