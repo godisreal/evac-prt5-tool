@@ -35,8 +35,10 @@ https://groups.google.com/g/fds-smv/c/dFUWR00T6hw
 Thank Topi for sharing his wonderful python script and thank Salah Benkorichi for sending this thread to me!
 I mainly modified xyz.shape = (7,nplim) for evac prt5 data. In Topi's script it was initially given by xyz.shape = (3,nplim) for Lagrangian Particles. We use xyz.shape = (7,nplim) for evac prt5 data.  
 
-We need your help to improve this small program! New contributors are welcome.  
+This python program is also re-using some python scripts in pyfdstools.  We appreciate Jonathan L. Hodges for his wonderful scrpits for parsing fds/smokeview input and output data files.  Please refer to his repo pyfdstools for more details.  
+https://github.com/johodges/pyfdstools
 
+We need your help to improve this small program! New contributors are welcome.  
 
 Citation
 --------
