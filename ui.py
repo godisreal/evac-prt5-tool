@@ -494,8 +494,10 @@ class GUI(object):
         #Time, XYZ, TAG, INFO, n_part, n_agents, n_quant = readPRTfile(self.fname_EVAC, wrtxt=False)
         try:
             Time, XYZ, TAG, INFO, n_part, version, n_quant = readPRTfile(self.fname_EVAC, wrtxt=False)
+            print("readPRTfile!")
         except:
             Time, XYZ, TAG, n_part, version, n_quant = readPRTfileNoQ(self.fname_EVAC, wrtxt=False)
+            print("readPRTfileNoQ!")
         TLength = len(Time)
         deltaT2 = (Time[-1]-Time[0])/TLength
         print(deltaT2, TLength)
@@ -503,7 +505,7 @@ class GUI(object):
 
     def startSMV(self, event=None):
         #os.system(os.path.join(self.rootdir, '\SMV6\smokeview.exe')) #+ os.path.join(self.fname_EVAC))
-        os.system('.\SMV5\smokeview.exe') #+ os.path.join(self.fname_EVAC))
+        os.system('.\SMV6\smokeview.exe') #+ os.path.join(self.fname_EVAC))
         
     def revFDS(self, event=None):
         os.system('notepad '+ os.path.join(self.fname_FDS))
