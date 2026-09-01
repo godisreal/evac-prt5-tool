@@ -381,8 +381,11 @@ class GUI(object):
         #self.openfn  = os.path.basename(self.fname_EVAC)
         #self.opendir = os.path.dirname(self.fname_EVAC)
         #self.setStatusStr("Select prt5/binary Data File.")
-        temp=self.openfn.split('.')
-        fnsuffix=temp[-1]
+        #temp = self.openfn.split('.')
+        temp = self.openfn.split('.')
+        print(temp)
+        fnsuffix = str(temp[-1].strip())
+        #fnsuffix=temp[-1]
         #self.lb1.config(text = "The input binary data file selected: "+str(temp[-1])+"\n")
         #self.textInformation.insert(END, '\n'+'EVAC prt5/binary Data Selected:   '+self.fname_EVAC+'\n')
         #print('fname_EVAC', self.fname_EVAC)
@@ -502,10 +505,28 @@ class GUI(object):
         deltaT2 = (Time[-1]-Time[0])/TLength
         print(deltaT2, TLength)
         print('\n\n', Time)
+        
+        self.openfn  = os.path.basename(self.fname_EVAC)
+        self.opendir = os.path.dirname(self.fname_EVAC)
+        temp = self.openfn.split('.')
+        #print(temp)
+        fnsuffix = str(temp[-1].strip())
+        if fnsuffix != 'prt5':
+            self.textInformation.insert(END, "\n Prt5 Data is required to write in smv script, but the binary data is not with suffix of prt5!!!  The binary data will still be written in smv script, but please double check!!!\n")
+            msg.showinfo(" Prt5 Data File is Required!",  "Prt5 Data is required to write in smv script, but the binary data is not with suffix of prt5!!!  The binary data will still be written in smv script, but please double check!!!")
+            
+        fsmv=open(self.fname_smv, 'a+')
+        fsmv.write('\n')
+        fsmv.write('EVA5     1     1.2000\n')
+        fsmv.write(str(self.openfn)+'\n')
+        fsmv.write('  1\n')
+        fsmv.write('  1\n')
+        fsmv.close()
+        
 
     def startSMV(self, event=None):
         #os.system(os.path.join(self.rootdir, '\SMV6\smokeview.exe')) #+ os.path.join(self.fname_EVAC))
-        os.system('.\SMV6\smokeview.exe') #+ os.path.join(self.fname_EVAC))
+        os.system('.\SMV5\smokeview.exe') #+ os.path.join(self.fname_EVAC))
         
     def revFDS(self, event=None):
         os.system('notepad '+ os.path.join(self.fname_FDS))
